@@ -43,11 +43,11 @@ fi
 echo "No lockfile: continuing"
 touch /tmp/openaps.lock
 # if there are any old loops still running without proper lockfiles, kill them off
-kill $(pgrep -f openaps-js/bin/loop.sh | grep -v ^$$\$)
+kill $(pgrep -f openaps-sh/loop.sh | grep -v ^$$\$)
 
 # make sure decocare can talk to the Carelink USB stick
 ~/decocare/insert.sh 2>/dev/null >/dev/null
-python -m decocare.stick $(python -m decocare.scan) >/dev/null && echo "decocare.scan OK" || sudo ~/openaps-js/bin/fix-dead-carelink.sh | tee -a /var/log/openaps/easy.log
+python -m decocare.stick $(python -m decocare.scan) >/dev/null && echo "decocare.scan OK" || sudo ~/openaps-sh/fix-dead-carelink.sh | tee -a /var/log/openaps/easy.log
 
 # sometimes git gets stuck
 find ~/openaps-dev/.git/index.lock -mmin +5 -exec rm {} \; 2>/dev/null > /dev/null
@@ -97,7 +97,7 @@ querypump() {
 # try to upload pumphistory data
 upload() {
     #findpumphistory && ~/bin/openaps-mongo.sh &
-    ~/openaps-js/bin/ns-upload.sh
+    ~/openaps-sh/ns-upload.sh
     #ping -c 1 google.com > /dev/null && touch /tmp/openaps.online
 }
 # if we haven't uploaded successfully in 10m, use offline mode (if no temp running, set current basal as temp to show the loop is working)
@@ -106,7 +106,7 @@ suggest() {
     grep -q "too old" requestedtemp.online.json || ( find /tmp/openaps.online -mmin -10 | egrep -q '.*' && rsync -tu requestedtemp.online.json requestedtemp.json || rsync -tu requestedtemp.offline.json requestedtemp.json )
 }
 # get updated pump settings (basal schedules, targets, ISF, etc.)
-getpumpsettings() { ~/openaps-js/bin/pumpsettings.sh; }
+getpumpsettings() { ~/openaps-sh/pumpsettings.sh; }
 
 # functions for making sure we have up-to-date data before proceeding
 findclock() { find clock.json -mmin -10 | egrep -q '.*'; }
@@ -115,7 +115,7 @@ findglucose() { find glucose.json -mmin -10 | egrep -q '.*'; }
 findpumphistory() { find pumphistory.json -mmin -10 | egrep -q '.*'; }
 findrequestedtemp() { find requestedtemp.json -mmin -10 | egrep -q '.*'; }
 # write out current status to pebble.json
-pebble() { ~/openaps-js/bin/pebble.sh; }
+pebble() { ~/openaps-sh/pebble.sh; }
 
 bail() {
   echo "$@" | tee -a /var/log/openaps/easy.log
@@ -124,7 +124,7 @@ bail() {
 
 actionrequired() {
     # make sure we can still talk to the carelink stick
-    python -m decocare.stick $(python -m decocare.scan) >/dev/null || sudo ~/openaps-js/bin/fix-dead-carelink.sh | tee -a /var/log/openaps/easy.log
+    python -m decocare.stick $(python -m decocare.scan) >/dev/null || sudo ~/openaps-sh/fix-dead-carelink.sh | tee -a /var/log/openaps/easy.log
     # if reservoir insulin remaining changes by more than 0.2U between runs, that probably indicates a bolus
     if awk '{getline t<"reservoir.json.new"; if (($0-t) > 0.2 || ($0-t < -0.2)) print "Reservoir changed from " $0 " to " t}' reservoir.json | grep changed; then
         echo "Reservoir status changed"
@@ -162,7 +162,7 @@ execute() {
     getglucose
 
     # if we're offline, set the clock to the pump/CGM time
-    ~/openaps-js/bin/clockset.sh
+    ~/openaps-sh/clockset.sh
 
     # dump out a "what we're about to try to do" report
     suggest && pebble
