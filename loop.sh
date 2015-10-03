@@ -32,7 +32,7 @@ touch /tmp/openaps.lock
 
 # make sure decocare can talk to the Carelink USB stick
 ~/decocare/insert.sh 2>/dev/null >/dev/null
-python -m decocare.stick $(python -m decocare.scan) >/dev/null && echo "decocare.scan OK" || sudo ~/openaps-js/bin/fix-dead-carelink.sh | tee -a /var/log/openaps/easy.log
+python -m decocare.stick $(python -m decocare.scan) >/dev/null && echo "decocare.scan OK" || sudo ~/openaps-sh/fix-dead-carelink.sh | tee -a /var/log/openaps/easy.log
 
 # sometimes git gets stuck
 find ~/openaps-dev/.git/index.lock -mmin +5 -exec rm {} \; 2>/dev/null > /dev/null
@@ -84,7 +84,7 @@ suggest() {
     grep -q "too old" requestedtemp.online.json || ( find /tmp/openaps.online -mmin -10 | egrep -q '.*' && rsync -tu requestedtemp.online.json requestedtemp.json || rsync -tu requestedtemp.offline.json requestedtemp.json )
 }
 # get updated pump settings (basal schedules, targets, ISF, etc.)
-getpumpsettings() { ~/openaps-js/bin/pumpsettings.sh; }
+getpumpsettings() { ~/openaps-sh/pumpsettings.sh; }
 
 # functions for making sure we have up-to-date data before proceeding
 findclocknew() { find clock.json.new -mmin -10 | egrep -q '.*'; }
@@ -92,7 +92,7 @@ findglucose() { find glucose.json -mmin -10 | egrep -q '.*'; }
 findpumphistory() { find pumphistory.json -mmin -10 | egrep -q '.*'; }
 findrequestedtemp() { find requestedtemp.json -mmin -10 | egrep -q '.*'; }
 # write out current status to pebble.json
-pebble() { ~/openaps-js/bin/pebble.sh; }
+pebble() { ~/openaps-sh/pebble.sh; }
 
 
 # main event loop
@@ -114,7 +114,7 @@ upload
 getglucose
 
 # if we're offline, set the clock to the pump/CGM time
-~/openaps-js/bin/clockset.sh
+~/openaps-sh/clockset.sh
 
 # dump out a "what we're about to try to do" report
 suggest && pebble
