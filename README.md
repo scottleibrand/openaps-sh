@@ -1,6 +1,6 @@
-# openaps-js
+# openaps-sh
 
-Javascript plugins for openaps
+Bash scripts for openaps
 
 This is part of a series of tools to support a self-driven DIY
 implementation based on the OpenAPS reference design. The tools may be
