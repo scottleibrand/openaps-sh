@@ -47,7 +47,7 @@ kill $(pgrep -f openaps-sh/loop.sh | grep -v ^$$\$)
 
 # make sure decocare can talk to the Carelink USB stick
 ~/decocare/insert.sh 2>/dev/null >/dev/null
-python -m decocare.stick $(python -m decocare.scan) >/dev/null && echo "decocare.scan OK" || sudo ~/openaps-sh/fix-dead-carelink.sh | tee -a /var/log/openaps/easy.log
+python -m decocare.stick $(python -m decocare.scan) >/dev/null && echo "decocare.scan OK" || sudo ~/openaps-sh/reset-usb.sh | tee -a /var/log/openaps/easy.log
 
 # sometimes git gets stuck
 find ~/openaps-dev/.git/index.lock -mmin +5 -exec rm {} \; 2>/dev/null > /dev/null
@@ -124,7 +124,7 @@ bail() {
 
 actionrequired() {
     # make sure we can still talk to the carelink stick
-    python -m decocare.stick $(python -m decocare.scan) >/dev/null || sudo ~/openaps-sh/fix-dead-carelink.sh | tee -a /var/log/openaps/easy.log
+    python -m decocare.stick $(python -m decocare.scan) >/dev/null || sudo ~/openaps-sh/reset-usb.sh | tee -a /var/log/openaps/easy.log
     # if reservoir insulin remaining changes by more than 0.2U between runs, that probably indicates a bolus
     if awk '{getline t<"reservoir.json.new"; if (($0-t) > 0.2 || ($0-t < -0.2)) print "Reservoir changed from " $0 " to " t}' reservoir.json | grep changed; then
         echo "Reservoir status changed"
