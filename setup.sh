@@ -32,8 +32,7 @@ if [[ $# -lt 2 ]]; then
 else
     max_iob=$2
 fi
-#grep -q max_iob max_iob.json 2>/dev/null ||
-echo "{ "max_iob": $max_iob }" > max_iob.json
+( ! grep -q max_iob max_iob.json 2>/dev/null || [[ $max_iob != "0" ]] ) && echo "{ "max_iob": $max_iob }" > max_iob.json
 cat max_iob.json
 git add max_iob.json
 
@@ -71,6 +70,8 @@ grep settings/insulin_sensitivies.json.new /tmp/openaps-reports || openaps repor
 grep settings/basal_profile.json.new /tmp/openaps-reports || openaps report add settings/basal_profile.json.new JSON pump read_selected_basal_profile || die "Can't add basal_profile.json.new"
 grep settings/settings.json.new /tmp/openaps-reports || openaps report add settings/settings.json.new JSON pump read_settings || die "Can't add settings.json.new"
 
+# don't re-create aliases if they already exist
+openaps alias show 2>/dev/null > /tmp/openaps-aliases
 # add aliases
-openaps alias show invoke 2>/dev/null || openaps alias add invoke "report invoke" || die "Can't add invoke"
+grep invoke /tmp/openaps-aliases || openaps alias add invoke "report invoke" || die "Can't add invoke"
 
