@@ -34,6 +34,7 @@ else
 fi
 #grep -q max_iob max_iob.json 2>/dev/null ||
 echo "{ "max_iob": $max_iob }" > max_iob.json
+cat max_iob.json
 git add max_iob.json
 
 # don't re-create devices if they already exist
