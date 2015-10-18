@@ -57,21 +57,24 @@ openaps report show 2>/dev/null > /tmp/openaps-reports
 
 # add reports for frequently-refreshed monitoring data
 ls monitor 2>/dev/null >/dev/null || mkdir monitor || die "Can't mkdir monitor"
-grep monitor/glucose.json.new /tmp/openaps-reports || openaps report add monitor/glucose.json.new JSON cgm iter_glucose 5 || die "Can't add glucose.json.new"
-grep monitor/clock.json.new /tmp/openaps-reports || openaps report add monitor/clock.json.new JSON pump read_clock || die "Can't add clock.json.new"
-grep monitor/temp_basal.json.new /tmp/openaps-reports || openaps report add monitor/temp_basal.json.new JSON pump read_temp_basal || die "Can't add temp_basal.json.new"
-grep monitor/reservoir.json.new /tmp/openaps-reports || openaps report add monitor/reservoir.json.new JSON pump reservoir || die "Can't add reservoir.json.new"
-grep monitor/pumphistory.json.new /tmp/openaps-reports || openaps report add monitor/pumphistory.json.new JSON pump iter_pump_hours 4 || die "Can't add pumphistory.json.new"
+grep monitor/glucose.json /tmp/openaps-reports || openaps report add monitor/glucose.json JSON cgm iter_glucose 5 || die "Can't add glucose.json"
+grep monitor/clock.json /tmp/openaps-reports || openaps report add monitor/clock.json JSON pump read_clock || die "Can't add clock.json"
+grep monitor/temp_basal.json /tmp/openaps-reports || openaps report add monitor/temp_basal.json JSON pump read_temp_basal || die "Can't add temp_basal.json"
+grep monitor/reservoir.json /tmp/openaps-reports || openaps report add monitor/reservoir.json JSON pump reservoir || die "Can't add reservoir.json"
+grep monitor/pumphistory.json /tmp/openaps-reports || openaps report add monitor/pumphistory.json JSON pump iter_pump_hours 4 || die "Can't add pumphistory.json"
 
 # add reports for infrequently-refreshed settings data
 ls settings 2>/dev/null >/dev/null || mkdir settings || die "Can't mkdir settings"
-grep settings/bg_targets.json.new /tmp/openaps-reports || openaps report add settings/bg_targets.json.new JSON pump read_bg_targets || die "Can't add bg_targets.json.new"
-grep settings/insulin_sensitivies.json.new /tmp/openaps-reports || openaps report add settings/insulin_sensitivies.json.new JSON pump read_insulin_sensitivies || die "Can't add insulin_sensitivies.json.new"
-grep settings/basal_profile.json.new /tmp/openaps-reports || openaps report add settings/basal_profile.json.new JSON pump read_selected_basal_profile || die "Can't add basal_profile.json.new"
-grep settings/settings.json.new /tmp/openaps-reports || openaps report add settings/settings.json.new JSON pump read_settings || die "Can't add settings.json.new"
+grep settings/bg_targets.json /tmp/openaps-reports || openaps report add settings/bg_targets.json JSON pump read_bg_targets || die "Can't add bg_targets.json"
+grep settings/insulin_sensitivies.json /tmp/openaps-reports || openaps report add settings/insulin_sensitivies.json JSON pump read_insulin_sensitivies || die "Can't add insulin_sensitivies.json"
+grep settings/basal_profile.json /tmp/openaps-reports || openaps report add settings/basal_profile.json JSON pump read_selected_basal_profile || die "Can't add basal_profile.json"
+grep settings/settings.json /tmp/openaps-reports || openaps report add settings/settings.json JSON pump read_settings || die "Can't add settings.json"
 
 # don't re-create aliases if they already exist
 openaps alias show 2>/dev/null > /tmp/openaps-aliases
 # add aliases
 grep invoke /tmp/openaps-aliases || openaps alias add invoke "report invoke" || die "Can't add invoke"
+grep monitor-cgm /tmp/openaps-aliases || openaps alias add monitor-cgm "report invoke monitor/glucose.json" || die "Can't add monitor-cgm"
+grep monitor-pump /tmp/openaps-aliases || openaps alias add monitor-pump "report invoke monitor/clock.json monitor/temp_basal.json monitor/reservoir.json monitor/pumphistory.json" || die "Can't add monitor-pump"
+grep get-settings /tmp/openaps-aliases || openaps alias add get-settings "report invoke invoke settings/bg_targets.json settings/insulin_sensitivies.json settings/basal_profile.json settings/settings.json" || die "Can't add get-settings"
 
