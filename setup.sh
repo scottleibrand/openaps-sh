@@ -90,5 +90,5 @@ grep ^monitor-pump /tmp/openaps-aliases || openaps alias add monitor-pump "repor
 grep ^get-settings /tmp/openaps-aliases || openaps alias add get-settings "report invoke settings/bg_targets.json settings/insulin_sensitivies.json settings/basal_profile.json settings/settings.json settings/profile.json" || die "Can't add get-settings"
 grep ^gather /tmp/openaps-aliases || openaps alias add gather '! bash -c "rm monitor/*; openaps monitor-cgm && openaps monitor-pump && openaps get-settings"' || die "Can't add gather"
 grep ^enact /tmp/openaps-aliases || openaps alias add enact '! bash -c "rm enact/suggested.json; openaps invoke enact/suggested.json && cat enact/suggested.json && grep -q duration enact/suggested.json && ( openaps invoke enact/enacted.json && cat enact/enacted.json ) || echo No action required"' || die "Can't add enact"
-grep ^loop /tmp/openaps-aliases || openaps alias add loop '! bash -c "openaps preflight && openaps gather && openaps enact"' || die "Can't add lop"
+grep ^loop /tmp/openaps-aliases || openaps alias add loop '! bash -c "openaps monitor-cgm 2>/dev/null && ( openaps preflight && openaps gather && openaps enact) || echo No CGM data."' || die "Can't add loop"
 grep ^retry-loop /tmp/openaps-aliases || openaps alias add retry-loop '! bash -c "until( ! mm-stick warmup || openaps loop); do sleep 5; done"' || die "Can't add retry-loop"
