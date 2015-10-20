@@ -84,7 +84,8 @@ openaps alias show 2>/dev/null > /tmp/openaps-aliases
 # add aliases
 grep ^invoke /tmp/openaps-aliases || openaps alias add invoke "report invoke" || die "Can't add invoke"
 grep ^monitor-cgm /tmp/openaps-aliases || openaps alias add monitor-cgm "report invoke monitor/glucose.json" || die "Can't add monitor-cgm"
-grep ^monitor-pump /tmp/openaps-aliases || openaps alias add monitor-pump "report invoke monitor/clock.json monitor/temp_basal.json monitor/reservoir.json monitor/pumphistory.json monitor/iob.json" || die "Can't add monitor-pump"
+grep ^monitor-pump /tmp/openaps-aliases || openaps alias add monitor-pump "report invoke monitor/clock.json monitor/temp_basal.json monitor/pumphistory.json monitor/iob.json" || die "Can't add monitor-pump"
 grep ^get-settings /tmp/openaps-aliases || openaps alias add get-settings "report invoke settings/bg_targets.json settings/insulin_sensitivies.json settings/basal_profile.json settings/settings.json settings/profile.json" || die "Can't add get-settings"
 grep ^gather /tmp/openaps-aliases || openaps alias add gather '! bash -c "rm monitor/*; openaps monitor-cgm && openaps monitor-pump && openaps get-settings"' || die "Can't add gather"
-grep ^enact /tmp/openaps-aliases || openaps alias add enact "enact/suggested.json enacted.json" || die "Can't add suggest"
+grep ^enact /tmp/openaps-aliases || openaps alias add enact '! bash -c "rm enact/suggested.json; openaps invoke enact/suggested.json && cat enact/suggested.json && grep -q duration enact/suggested.json && openaps invoke enact/enacted.json && cat enact/enacted.json"' || die "Can't add suggest"
+grep ^loop /tmp/openaps-aliases || openaps alias add loop '! bash -c "openaps gather && openaps enact"' || die "Can't add suggest"
