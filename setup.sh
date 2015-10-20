@@ -49,7 +49,7 @@ grep oref0 /tmp/openaps-devices || openaps device add oref0 process oref0 || die
 git add oref0.ini
 grep iob /tmp/openaps-devices || openaps device add iob process --require "pumphistory basal_profile clock" oref0 calculate-iob || die "Can't add iob"
 git add iob.ini
-grep get-profile /tmp/openaps-devices || openaps device add get-profile process --require "settings bg_targets isf basal_profile max_iob" oref0 calculate-iob || die "Can't add iob"
+grep get-profile /tmp/openaps-devices || openaps device add get-profile process --require "settings bg_targets isf basal_profile" oref0 get-profile || die "Can't add get-profile"
 git add get-profile.ini
 
 # don't re-create reports if they already exist
@@ -69,6 +69,7 @@ grep settings/bg_targets.json /tmp/openaps-reports || openaps report add setting
 grep settings/insulin_sensitivies.json /tmp/openaps-reports || openaps report add settings/insulin_sensitivies.json JSON pump read_insulin_sensitivies || die "Can't add insulin_sensitivies.json"
 grep settings/basal_profile.json /tmp/openaps-reports || openaps report add settings/basal_profile.json JSON pump read_selected_basal_profile || die "Can't add basal_profile.json"
 grep settings/settings.json /tmp/openaps-reports || openaps report add settings/settings.json JSON pump read_settings || die "Can't add settings.json"
+grep settings/profile.json /tmp/openaps-reports || openaps report add settings/profile.json text get-profile shell settings/settings.json settings/bg_targets.json settings/insulin_sensitivies.json settings/basal_profile.json max_iob.json || die "Can't add profile.json"
 
 # don't re-create aliases if they already exist
 openaps alias show 2>/dev/null > /tmp/openaps-aliases
@@ -77,4 +78,3 @@ grep invoke /tmp/openaps-aliases || openaps alias add invoke "report invoke" || 
 grep monitor-cgm /tmp/openaps-aliases || openaps alias add monitor-cgm "report invoke monitor/glucose.json" || die "Can't add monitor-cgm"
 grep monitor-pump /tmp/openaps-aliases || openaps alias add monitor-pump "report invoke monitor/clock.json monitor/temp_basal.json monitor/reservoir.json monitor/pumphistory.json" || die "Can't add monitor-pump"
 grep get-settings /tmp/openaps-aliases || openaps alias add get-settings "report invoke settings/bg_targets.json settings/insulin_sensitivies.json settings/basal_profile.json settings/settings.json" || die "Can't add get-settings"
-
