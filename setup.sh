@@ -32,7 +32,7 @@ if [[ $# -lt 2 ]]; then
 else
     max_iob=$2
 fi
-( ! grep -q max_iob max_iob.json 2>/dev/null || [[ $max_iob != "0" ]] ) && echo "{ "max_iob": $max_iob }" > max_iob.json
+( ! grep -q max_iob max_iob.json 2>/dev/null || [[ $max_iob != "0" ]] ) && echo "{ \"max_iob\": $max_iob }" > max_iob.json
 cat max_iob.json
 git add max_iob.json
 
@@ -47,10 +47,12 @@ grep cgm /tmp/openaps-devices || openaps device add cgm dexcom || die "Can't add
 git add cgm.ini
 grep oref0 /tmp/openaps-devices || openaps device add oref0 process oref0 || die "Can't add oref0"
 git add oref0.ini
-grep iob /tmp/openaps-devices || openaps device add iob process --require "pumphistory basal_profile clock" oref0 calculate-iob || die "Can't add iob"
+grep iob /tmp/openaps-devices || openaps device add iob process --require "pumphistory profile clock" oref0 calculate-iob || die "Can't add iob"
 git add iob.ini
-grep get-profile /tmp/openaps-devices || openaps device add get-profile process --require "settings bg_targets isf basal_profile" oref0 get-profile || die "Can't add get-profile"
+grep get-profile /tmp/openaps-devices || openaps device add get-profile process --require "settings bg_targets isf basal_profile max_iob" oref0 get-profile || die "Can't add get-profile"
 git add get-profile.ini
+grep determine-basal /tmp/openaps-devices || openaps device add determine-basal process --require "iob temp_basal glucose profile" oref0 determine-basal || die "Can't add determine-basal"
+git add determine-basal.ini
 
 # don't re-create reports if they already exist
 openaps report show 2>/dev/null > /tmp/openaps-reports
@@ -62,6 +64,7 @@ grep monitor/clock.json /tmp/openaps-reports || openaps report add monitor/clock
 grep monitor/temp_basal.json /tmp/openaps-reports || openaps report add monitor/temp_basal.json JSON pump read_temp_basal || die "Can't add temp_basal.json"
 grep monitor/reservoir.json /tmp/openaps-reports || openaps report add monitor/reservoir.json JSON pump reservoir || die "Can't add reservoir.json"
 grep monitor/pumphistory.json /tmp/openaps-reports || openaps report add monitor/pumphistory.json JSON pump iter_pump_hours 4 || die "Can't add pumphistory.json"
+grep monitor/iob.json /tmp/openaps-reports || openaps report add monitor/iob.json text iob shell monitor/pumphistory.json settings/profile.json monitor/clock.json || die "Can't add iob.json"
 
 # add reports for infrequently-refreshed settings data
 ls settings 2>/dev/null >/dev/null || mkdir settings || die "Can't mkdir settings"
@@ -74,7 +77,7 @@ grep settings/profile.json /tmp/openaps-reports || openaps report add settings/p
 # don't re-create aliases if they already exist
 openaps alias show 2>/dev/null > /tmp/openaps-aliases
 # add aliases
-grep invoke /tmp/openaps-aliases || openaps alias add invoke "report invoke" || die "Can't add invoke"
-grep monitor-cgm /tmp/openaps-aliases || openaps alias add monitor-cgm "report invoke monitor/glucose.json" || die "Can't add monitor-cgm"
-grep monitor-pump /tmp/openaps-aliases || openaps alias add monitor-pump "report invoke monitor/clock.json monitor/temp_basal.json monitor/reservoir.json monitor/pumphistory.json" || die "Can't add monitor-pump"
-grep get-settings /tmp/openaps-aliases || openaps alias add get-settings "report invoke settings/bg_targets.json settings/insulin_sensitivies.json settings/basal_profile.json settings/settings.json" || die "Can't add get-settings"
+grep ^invoke /tmp/openaps-aliases || openaps alias add invoke "report invoke" || die "Can't add invoke"
+grep ^monitor-cgm /tmp/openaps-aliases || openaps alias add monitor-cgm "report invoke monitor/glucose.json" || die "Can't add monitor-cgm"
+grep ^monitor-pump /tmp/openaps-aliases || openaps alias add monitor-pump "report invoke monitor/clock.json monitor/temp_basal.json monitor/reservoir.json monitor/pumphistory.json monitor/iob.json" || die "Can't add monitor-pump"
+grep ^get-settings /tmp/openaps-aliases || openaps alias add get-settings "report invoke settings/bg_targets.json settings/insulin_sensitivies.json settings/basal_profile.json settings/settings.json settings/profile.json" || die "Can't add get-settings"
