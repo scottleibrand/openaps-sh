@@ -20,7 +20,7 @@ die() {
 }
 
 if [[ $# -lt 1 ]]; then
-    openaps device show pump 2>/dev/null >/dev/null || die "Usage: setup.sh <pump serial #> [max_iob]"
+    openaps device show pump 2>/dev/null >/dev/null || die "Usage: setup.sh <pump serial #> [max_iob] [nightscout_url]"
 fi
 serial=$1
 
@@ -28,13 +28,21 @@ serial=$1
 cd ~/openaps-dev || die "Can't cd openaps-dev"
 
 if [[ $# -lt 2 ]]; then
-    max_iob=0;
+    max_iob=0
 else
     max_iob=$2
 fi
 ( ! grep -q max_iob max_iob.json 2>/dev/null || [[ $max_iob != "0" ]] ) && echo "{ \"max_iob\": $max_iob }" > max_iob.json
 cat max_iob.json
 git add max_iob.json
+
+if [[ $# -gt 2 ]]; then
+	nightscout_url=$3
+fi
+
+if [[ $# -gt 3 ]]; then
+	azure_url=$4
+fi
 
 # don't re-create devices if they already exist
 openaps device show 2>/dev/null > /tmp/openaps-devices
@@ -53,6 +61,12 @@ grep get-profile /tmp/openaps-devices || openaps device add get-profile process 
 git add get-profile.ini
 grep determine-basal /tmp/openaps-devices || openaps device add determine-basal process --require "iob temp_basal glucose profile" oref0 determine-basal || die "Can't add determine-basal"
 git add determine-basal.ini
+grep pebble /tmp/openaps-devices || openaps device add pebble process --require "glucose clock iob basal_profile temp_basal insulin_sensitivies suggested" oref0 pebble || die "Can't add pebble"
+git add pebble.ini
+grep ns-upload /tmp/openaps-devices || openaps device add ns-upload process --require "pumphistory" oref0 ns-upload || die "Can't add ns-upload"
+git add ns-upload.ini
+grep azure-upload /tmp/openaps-devices || openaps device add azure-upload process --require "iob enactedBasal bgreading webapi" oref0 sendtempbasal-Azure || die "Can't add sendtempbasal-Azure"
+git add azure-upload.ini
 
 # don't re-create reports if they already exist
 openaps report show 2>/dev/null > /tmp/openaps-reports
@@ -80,6 +94,11 @@ ls enact 2>/dev/null >/dev/null || mkdir enact || die "Can't mkdir enact"
 grep enact/suggested.json /tmp/openaps-reports || openaps report add enact/suggested.json text determine-basal shell monitor/iob.json monitor/temp_basal.json monitor/glucose.json settings/profile.json || die "Can't add suggested.json"
 grep enact/enacted.json /tmp/openaps-reports || openaps report add enact/enacted.json JSON pump set_temp_basal enact/suggested.json || die "Can't add enacted.json"
 
+# monitoring reports
+grep upload/oref0-pebble.json /tmp/openaps-reports || openaps report add upload/oref0-pebble.json text pebble shell monitor/glucose.json monitor/clock.json monitor/iob.json settings/basal_profile.json settings/temp_basal.json settings/insulin_sensitivies.json enact/suggested.json || die "Can't add oref0.json"
+grep upload/ns-upload.json /tmp/openaps-reports || openaps report add upload/ns-upload.json text ns-upload shell monitor/pumphistory.json || die "Can't add ns-upload.json"
+grep upload/azure-upload.json /tmp/openaps-reports || openaps report add upload/azure-upload.json text azure-upload shell monitor/iob.json enact/enacted.json monitor/glucose.json $azure_url || die "Can't add azure-upload.json"
+
 # don't re-create aliases if they already exist
 openaps alias show 2>/dev/null > /tmp/openaps-aliases
 # add aliases
@@ -88,7 +107,20 @@ grep ^preflight /tmp/openaps-aliases || openaps alias add preflight '! bash -c "
 grep ^monitor-cgm /tmp/openaps-aliases || openaps alias add monitor-cgm "report invoke monitor/glucose.json" || die "Can't add monitor-cgm"
 grep ^monitor-pump /tmp/openaps-aliases || openaps alias add monitor-pump "report invoke monitor/clock.json monitor/temp_basal.json monitor/pumphistory.json monitor/iob.json" || die "Can't add monitor-pump"
 grep ^get-settings /tmp/openaps-aliases || openaps alias add get-settings "report invoke settings/bg_targets.json settings/insulin_sensitivies.json settings/basal_profile.json settings/settings.json settings/profile.json" || die "Can't add get-settings"
-grep ^gather /tmp/openaps-aliases || openaps alias add gather '! bash -c "rm monitor/*; openaps monitor-cgm && openaps monitor-pump && openaps get-settings"' || die "Can't add gather"
+if [ $nightscout_url ]; then
+	full_url=$nightscout_url/api/v1/entries.json?type=sgv
+	grep ns-glucose /tmp/openaps-devices || openaps device add ns-glucose process --require nightscout_url "bash -c \"curl -s $full_url | json -e 'this.glucose = this.sgv'\"" || die "Can't add ns-glucose"
+    git add ns-glucose.ini
+	grep ns-glucose.json /tmp/openaps-reports || openaps report add monitor/ns-glucose.json text ns-glucose shell $full_url || die "Can't add ns-glucose.json"
+	grep ^get-ns-glucose /tmp/openaps-aliases || openaps alias add get-ns-glucose "report invoke monitor/ns-glucose.json" || die "Can't add get-ns-glucose"
+	grep ^gather /tmp/openaps-aliases || openaps alias add gather '! bash -c "rm monitor/*; ( openaps monitor-cgm || openaps get-ns-glucose ) && openaps monitor-pump && openaps get-settings"' || die "Can't add gather"
+else
+	grep ^gather /tmp/openaps-aliases || openaps alias add gather '! bash -c "rm monitor/*; openaps monitor-cgm && openaps monitor-pump && openaps get-settings"' || die "Can't add gather"
+fi
 grep ^enact /tmp/openaps-aliases || openaps alias add enact '! bash -c "rm enact/suggested.json; openaps invoke enact/suggested.json && cat enact/suggested.json && grep -q duration enact/suggested.json && ( openaps invoke enact/enacted.json && cat enact/enacted.json ) || echo No action required"' || die "Can't add enact"
 grep ^loop /tmp/openaps-aliases || openaps alias add loop '! bash -c "openaps monitor-cgm 2>/dev/null && ( openaps preflight && openaps gather && openaps enact) || echo No CGM data."' || die "Can't add loop"
-grep ^retry-loop /tmp/openaps-aliases || openaps alias add retry-loop '! bash -c "until( ! mm-stick warmup || openaps loop); do sleep 5; done"' || die "Can't add retry-loop"
+grep ^pebble /tmp/openaps-aliases || openaps alias add pebble "report invoke upload/oref0-pebble.json" || die "Can't add pebble"
+grep ^ns-upload /tmp/openaps-aliases || openaps alias add ns-upload "report invoke upload/ns-upload.json" || die "Can't add ns-upload"
+grep ^azure-upload /tmp/openaps-aliases || openaps alias add azure-upload "report invoke upload/azure-upload.json" || die "Can't add azure-upload"
+grep ^upload /tmp/openaps-aliases || openaps alias add upload '! bash -c "openaps pebble; openaps ns-upload; openaps azure-upload"' || die "Can't add upload"
+grep ^retry-loop /tmp/openaps-aliases || openaps alias add retry-loop '! bash -c "until( ! mm-stick warmup || openaps loop); do sleep 5; done; openaps upload"' || die "Can't add retry-loop"
