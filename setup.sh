@@ -115,14 +115,17 @@ if [ $nightscout_url ]; then
     git add ns-glucose.ini
 	grep ns-glucose.json /tmp/openaps-reports || openaps report add monitor/ns-glucose.json text ns-glucose shell $sgv_url || die "Can't add ns-glucose.json"
 	grep ^get-ns-glucose /tmp/openaps-aliases || openaps alias add get-ns-glucose "report invoke monitor/ns-glucose.json" || die "Can't add get-ns-glucose"
-	grep ^gather /tmp/openaps-aliases || openaps alias add gather '! bash -c "rm monitor/*; ( openaps monitor-cgm 2>/dev/null || ( openaps get-ns-glucose && mv monitor/ns-glucose.json monitor/glucose.json ) ) && openaps monitor-pump && openaps get-settings"' || die "Can't add gather"
+    grep ^get-bg /tmp/openaps-aliases || openaps alias add get-bg '! bash -c "openaps monitor-cgm 2>/dev/null || ( openaps get-ns-glucose && mv monitor/ns-glucose.json monitor/glucose.json )"'
 else
-	grep ^gather /tmp/openaps-aliases || openaps alias add gather '! bash -c "rm monitor/*; openaps monitor-cgm 2>/dev/null && openaps monitor-pump && openaps get-settings"' || die "Can't add gather"
+    grep ^get-bg /tmp/openaps-aliases || openaps alias add get-bg "monitor-cgm"
 fi
+grep ^gather /tmp/openaps-aliases || openaps alias add gather '! bash -c "rm monitor/*; openaps get-bg && openaps monitor-pump && openaps get-settings"' || die "Can't add gather"
+openaps alias add wait-for-bg '! bash -c "cp monitor/glucose.json monitor/last-glucose.json; while(diff -q monitor/last-glucose.json monitor/glucose.json); do echo -n .; openaps get-bg >/dev/null; sleep 10; done"'
 grep ^enact /tmp/openaps-aliases || openaps alias add enact '! bash -c "rm enact/suggested.json; openaps invoke enact/suggested.json && cat enact/suggested.json && grep -q duration enact/suggested.json && ( openaps invoke enact/enacted.json && cat enact/enacted.json ) || echo No action required"' || die "Can't add enact"
+grep ^wait-loop /tmp/openaps-aliases || openaps alias add wait-loop '! bash -c "openaps preflight && openaps gather && openaps wait-for-bg && openaps enact"' || die "Can't add wait-loop"
 grep ^loop /tmp/openaps-aliases || openaps alias add loop '! bash -c "openaps preflight && openaps gather && openaps enact"' || die "Can't add loop"
 grep ^pebble /tmp/openaps-aliases || openaps alias add pebble "report invoke upload/pebble.json" || die "Can't add pebble"
 #grep ^azure-upload /tmp/openaps-aliases || openaps alias add azure-upload "report invoke upload/azure-upload.json" || die "Can't add azure-upload"
 #grep ^upload /tmp/openaps-aliases || openaps alias add upload '! bash -c "openaps pebble; openaps ns-upload; openaps azure-upload"' || die "Can't add upload"
 grep ^upload /tmp/openaps-aliases || openaps alias add upload '! bash -c "openaps pebble; openaps ns-upload"' || die "Can't add upload"
-grep ^retry-loop /tmp/openaps-aliases || openaps alias add retry-loop '! bash -c "until( ! mm-stick warmup || openaps loop); do sleep 5; done; openaps upload"' || die "Can't add retry-loop"
+grep ^retry-loop /tmp/openaps-aliases || openaps alias add retry-loop '! bash -c "openaps wait-loop || until( ! mm-stick warmup || openaps loop); do sleep 10; done; openaps upload"' || die "Can't add retry-loop"
