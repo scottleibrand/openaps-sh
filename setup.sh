@@ -44,6 +44,9 @@ if [[ $# -gt 3 ]]; then
 	azure_url=$4
 fi
 
+sudo cp ~/oref0/logrotate.openaps /etc/logrotate.d/openaps
+sudo cp ~/oref0/logrotate.rsyslog /etc/logrotate.d/rsyslog
+
 # don't re-create devices if they already exist
 openaps device show 2>/dev/null > /tmp/openaps-devices
 
@@ -63,7 +66,7 @@ grep determine-basal /tmp/openaps-devices || openaps device add determine-basal 
 git add determine-basal.ini
 grep pebble /tmp/openaps-devices || openaps device add pebble process --require "glucose iob basal_profile temp_basal suggested enacted" oref0 pebble || die "Can't add pebble"
 git add pebble.ini
-grep ns-upload /tmp/openaps-devices || openaps device add ns-upload process --require "pumphistory" oref0 ns-upload || die "Can't add ns-upload"
+grep ns-upload /tmp/openaps-devices || openaps device add ns-upload process --require "pumphistory" ns-upload-entries || die "Can't add ns-upload"
 git add ns-upload.ini
 grep azure-upload /tmp/openaps-devices || openaps device add azure-upload process --require "iob enactedBasal bgreading webapi" oref0 sendtempbasal-Azure || die "Can't add sendtempbasal-Azure"
 git add azure-upload.ini
@@ -128,4 +131,4 @@ grep ^pebble /tmp/openaps-aliases || openaps alias add pebble "report invoke upl
 #grep ^azure-upload /tmp/openaps-aliases || openaps alias add azure-upload "report invoke upload/azure-upload.json" || die "Can't add azure-upload"
 #grep ^upload /tmp/openaps-aliases || openaps alias add upload '! bash -c "openaps pebble; openaps ns-upload; openaps azure-upload"' || die "Can't add upload"
 grep ^upload /tmp/openaps-aliases || openaps alias add upload '! bash -c "openaps pebble; openaps ns-upload"' || die "Can't add upload"
-grep ^retry-loop /tmp/openaps-aliases || openaps alias add retry-loop '! bash -c "openaps wait-loop || until( ! mm-stick warmup || openaps loop); do sleep 10; done; openaps upload"' || die "Can't add retry-loop"
+grep ^retry-loop /tmp/openaps-aliases || openaps alias add retry-loop '! bash -c "openaps wait-loop || until( ! mm-stick warmup || openaps loop); do sleep 10; done; openaps upload && openaps monitor-pump && openaps upload"' || die "Can't add retry-loop"
