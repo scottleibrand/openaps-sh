@@ -44,8 +44,8 @@ if [[ $# -gt 3 ]]; then
 	azure_url=$4
 fi
 
-sudo cp ~/oref0/logrotate.openaps /etc/logrotate.d/openaps
-sudo cp ~/oref0/logrotate.rsyslog /etc/logrotate.d/rsyslog
+sudo cp ~/src/oref0/logrotate.openaps /etc/logrotate.d/openaps
+sudo cp ~/src/oref0/logrotate.rsyslog /etc/logrotate.d/rsyslog
 
 # don't re-create devices if they already exist
 openaps device show 2>/dev/null > /tmp/openaps-devices
