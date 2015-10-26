@@ -132,3 +132,6 @@ grep ^pebble /tmp/openaps-aliases || openaps alias add pebble "report invoke upl
 #grep ^upload /tmp/openaps-aliases || openaps alias add upload '! bash -c "openaps pebble; openaps ns-upload; openaps azure-upload"' || die "Can't add upload"
 grep ^upload /tmp/openaps-aliases || openaps alias add upload '! bash -c "openaps pebble; openaps ns-upload"' || die "Can't add upload"
 grep ^retry-loop /tmp/openaps-aliases || openaps alias add retry-loop '! bash -c "openaps wait-loop || until( ! mm-stick warmup || openaps loop); do sleep 10; done; openaps upload && openaps monitor-pump && openaps upload"' || die "Can't add retry-loop"
+(crontab -l; crontab -l | grep -q killall || echo '* * * * * killall --older-than 10m openaps') | crontab -
+(crontab -l; crontab -l | grep -q "git status" || echo '* * * * * cd ~/openaps-dev && git status > /dev/null || ( mv .git /tmp/.git-`date +%s` && openaps init . )') | crontab -
+(crontab -l; crontab -l | grep -q retry-loop || echo '* * * * * cd /home/pi/openaps-dev && ( ps aux | grep -v grep | grep -q "openaps retry-loop" && echo OpenAPS already running || openaps retry-loop ) 2>&1 | tee -a /var/log/openaps/loop.log') | crontab -
