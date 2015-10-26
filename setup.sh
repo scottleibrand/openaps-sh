@@ -133,7 +133,7 @@ grep ^pebble /tmp/openaps-aliases || openaps alias add pebble '! bash -c "grep -
 #grep ^azure-upload /tmp/openaps-aliases || openaps alias add azure-upload "report invoke upload/azure-upload.json" || die "Can't add azure-upload"
 #grep ^upload /tmp/openaps-aliases || openaps alias add upload '! bash -c "openaps pebble; openaps ns-upload; openaps azure-upload"' || die "Can't add upload"
 grep ^upload /tmp/openaps-aliases || openaps alias add upload '! bash -c "openaps pebble; openaps ns-upload"' || die "Can't add upload"
-grep ^retry-loop /tmp/openaps-aliases || openaps alias add retry-loop '! bash -c "openaps wait-loop || until( ! mm-stick warmup || ! openaps preflight || openaps loop); do sleep 10; done; openaps upload && openaps monitor-pump && openaps upload"' || die "Can't add retry-loop"
+grep ^retry-loop /tmp/openaps-aliases || openaps alias add retry-loop '! bash -c "openaps wait-loop || until( ! mm-stick warmup || ! openaps preflight || openaps loop); do sleep 10; done; openaps upload && openaps monitor-pump 2>/dev/null && openaps upload"' || die "Can't add retry-loop"
 
 # add crontab entries
 (crontab -l; crontab -l | grep -q PATH || echo 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin') | crontab -
