@@ -108,7 +108,7 @@ grep upload/pebble.json /tmp/openaps-reports || openaps report add upload/pebble
 openaps alias show 2>/dev/null > /tmp/openaps-aliases
 # add aliases
 grep ^invoke /tmp/openaps-aliases || openaps alias add invoke "report invoke" || die "Can't add invoke"
-grep ^preflight /tmp/openaps-aliases || openaps alias add preflight '! bash -c "rm -f monitor/clock.json && openaps report invoke monitor/clock.json 2>/dev/null && grep -q T monitor/clock.json && echo PREFLIGHT OK || ( mm-stick warmup || sudo oref0-reset-usb; echo PREFLIGHT FAIL; exit 1 )"' || die "Can't add preflight"
+grep ^preflight /tmp/openaps-aliases || openaps alias add preflight '! bash -c "rm -f monitor/clock.json && openaps report invoke monitor/clock.json 2>/dev/null && grep -q T monitor/clock.json && echo PREFLIGHT OK || ( mm-stick warmup || sudo oref0-reset-usb; echo PREFLIGHT FAIL; sleep 120; exit 1 )"' || die "Can't add preflight"
 grep ^monitor-cgm /tmp/openaps-aliases || openaps alias add monitor-cgm "report invoke monitor/glucose.json" || die "Can't add monitor-cgm"
 grep ^monitor-pump /tmp/openaps-aliases || openaps alias add monitor-pump "report invoke monitor/clock.json monitor/temp_basal.json monitor/pumphistory.json monitor/iob.json" || die "Can't add monitor-pump"
 grep ^get-settings /tmp/openaps-aliases || openaps alias add get-settings "report invoke settings/bg_targets.json settings/insulin_sensitivities.json settings/basal_profile.json settings/settings.json settings/profile.json" || die "Can't add get-settings"
