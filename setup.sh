@@ -47,7 +47,7 @@ fi
 sudo cp ~/src/oref0/logrotate.openaps /etc/logrotate.d/openaps
 sudo cp ~/src/oref0/logrotate.rsyslog /etc/logrotate.d/rsyslog
 
-test -d /var/log/openaps || sudo mkdir /var/log/openaps
+test -d /var/log/openaps || sudo mkdir /var/log/openaps && sudo chown pi /var/log/openaps
 
 # don't re-create devices if they already exist
 openaps device show 2>/dev/null > /tmp/openaps-devices
@@ -138,5 +138,5 @@ grep ^retry-loop /tmp/openaps-aliases || openaps alias add retry-loop '! bash -c
 # add crontab entries
 (crontab -l; crontab -l | grep -q PATH || echo 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin') | crontab -
 (crontab -l; crontab -l | grep -q killall || echo '* * * * * killall --older-than 10m openaps') | crontab -
-(crontab -l; crontab -l | grep -q "git status" || echo '* * * * * cd ~/openaps-dev && git status > /dev/null || ( mv .git /tmp/.git-`date +%s` && openaps init . )') | crontab -
+(crontab -l; crontab -l | grep -q "git status" || echo '* * * * * cd ~/openaps-dev && git status > /dev/null || ( mv .git /tmp/.git-`date +\%s` && openaps init . )') | crontab -
 (crontab -l; crontab -l | grep -q retry-loop || echo '* * * * * cd /home/pi/openaps-dev && ( ps aux | grep -v grep | grep -q "openaps retry-loop" && echo OpenAPS already running || openaps retry-loop ) 2>&1 | tee -a /var/log/openaps/loop.log') | crontab -
