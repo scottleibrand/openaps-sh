@@ -47,7 +47,7 @@ fi
 sudo cp ~/src/oref0/logrotate.openaps /etc/logrotate.d/openaps
 sudo cp ~/src/oref0/logrotate.rsyslog /etc/logrotate.d/rsyslog
 
-test -d /var/log/openaps || mkdir /var/log/openaps
+test -d /var/log/openaps || sudo mkdir /var/log/openaps
 
 # don't re-create devices if they already exist
 openaps device show 2>/dev/null > /tmp/openaps-devices
