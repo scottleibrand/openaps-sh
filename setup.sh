@@ -115,7 +115,7 @@ grep ^get-settings /tmp/openaps-aliases || openaps alias add get-settings "repor
 if [ $nightscout_url ]; then
     grep upload/ns-upload.json /tmp/openaps-reports || openaps report add upload/ns-upload.json text ns-upload shell monitor/pumphistory.json $nightscout_url || die "Can't add ns-upload.json"
     grep ^ns-upload /tmp/openaps-aliases || openaps alias add ns-upload "report invoke upload/ns-upload.json" || die "Can't add ns-upload"
-	sgv_url=$nightscout_url/api/v1/entries.json?type=sgv
+	sgv_url=$nightscout_url/api/v1/entries/sgv.json
 	grep ns-glucose /tmp/openaps-devices || openaps device add ns-glucose process --require nightscout_url "bash -c \"curl -s $sgv_url | json -e 'this.glucose = this.sgv'\"" || die "Can't add ns-glucose"
     git add ns-glucose.ini
 	grep ns-glucose.json /tmp/openaps-reports || openaps report add monitor/ns-glucose.json text ns-glucose shell $sgv_url || die "Can't add ns-glucose.json"
