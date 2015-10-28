@@ -125,7 +125,7 @@ else
     grep ^get-bg /tmp/openaps-aliases || openaps alias add get-bg "monitor-cgm"
 fi
 grep ^gather /tmp/openaps-aliases || openaps alias add gather '! bash -c "rm monitor/*; ( openaps get-bg && openaps get-settings && openaps monitor-pump ) 2>/dev/null"' || die "Can't add gather"
-openaps alias add wait-for-bg '! bash -c "cp monitor/glucose.json monitor/last-glucose.json; while(diff -q monitor/last-glucose.json monitor/glucose.json); do echo -n .; openaps get-bg >/dev/null; sleep 10; done"'
+grep ^wait-for-bg /tmp/openaps-aliases || openaps alias add wait-for-bg '! bash -c "cp monitor/glucose.json monitor/last-glucose.json; while(diff -q monitor/last-glucose.json monitor/glucose.json); do echo -n .; openaps get-bg >/dev/null; sleep 10; done"'
 grep ^enact /tmp/openaps-aliases || openaps alias add enact '! bash -c "rm enact/suggested.json; openaps invoke enact/suggested.json && cat enact/suggested.json && grep -q duration enact/suggested.json && ( openaps invoke enact/enacted.json && cat enact/enacted.json ) || echo No action required"' || die "Can't add enact"
 grep ^wait-loop /tmp/openaps-aliases || openaps alias add wait-loop '! bash -c "openaps preflight && openaps gather && openaps upload && openaps wait-for-bg && openaps enact"' || die "Can't add wait-loop"
 grep ^loop /tmp/openaps-aliases || openaps alias add loop '! bash -c "openaps preflight && openaps gather && openaps enact"' || die "Can't add loop"
