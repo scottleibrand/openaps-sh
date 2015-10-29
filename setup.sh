@@ -49,6 +49,8 @@ sudo cp ~/src/oref0/logrotate.rsyslog /etc/logrotate.d/rsyslog
 
 test -d /var/log/openaps || sudo mkdir /var/log/openaps && sudo chown pi /var/log/openaps
 
+openaps vendor add openapscontrib.timezones
+
 # don't re-create devices if they already exist
 openaps device show 2>/dev/null > /tmp/openaps-devices
 
@@ -68,6 +70,8 @@ grep determine-basal /tmp/openaps-devices || openaps device add determine-basal 
 git add determine-basal.ini
 grep pebble /tmp/openaps-devices || openaps device add pebble process --require "glucose iob basal_profile temp_basal suggested enacted" oref0 pebble || die "Can't add pebble"
 git add pebble.ini
+grep tz /tmp/openaps-devices || openaps device add tz timezones || die "Can't add tz"
+git add tz.ini
 grep ns-upload /tmp/openaps-devices || openaps device add ns-upload process --require "pumphistory" ns-upload-entries || die "Can't add ns-upload"
 git add ns-upload.ini
 grep azure-upload /tmp/openaps-devices || openaps device add azure-upload process --require "iob enactedBasal bgreading webapi" oref0 sendtempbasal-Azure || die "Can't add sendtempbasal-Azure"
