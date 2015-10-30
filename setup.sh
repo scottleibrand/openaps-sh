@@ -25,9 +25,6 @@ fi
 directory=`mkdir -p $1; cd $1; pwd`
 serial=$2
 
-( ( cd $directory 2>/dev/null && git status ) || ( openaps init $directory ) ) || die "Can't init $directory"
-cd $directory || die "Can't cd $directory"
-
 if [[ $# -lt 3 ]]; then
     max_iob=0
 else
@@ -44,6 +41,9 @@ echo
 read -p "Continue? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
+
+( ( cd $directory 2>/dev/null && git status ) || ( openaps init $directory ) ) || die "Can't init $directory"
+cd $directory || die "Can't cd $directory"
 
 ( ! grep -q max_iob max_iob.json 2>/dev/null || [[ $max_iob != "0" ]] ) && echo "{ \"max_iob\": $max_iob }" > max_iob.json
 cat max_iob.json
