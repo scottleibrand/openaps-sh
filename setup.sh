@@ -19,35 +19,40 @@ die() {
   exit 1
 }
 
-if [[ $# -lt 1 ]]; then
-    openaps device show pump 2>/dev/null >/dev/null || die "Usage: setup.sh <pump serial #> [max_iob] [nightscout_url]"
-fi
-serial=$1
-
-( ( cd ~/openaps-dev 2>/dev/null && git status ) || ( cd && openaps init openaps-dev ) ) || die "Can't init openaps-dev"
-cd ~/openaps-dev || die "Can't cd openaps-dev"
-
 if [[ $# -lt 2 ]]; then
+    openaps device show pump 2>/dev/null >/dev/null || die "Usage: setup.sh <directory> <pump serial #> [max_iob] [nightscout_url]"
+fi
+directory=`mkdir -p $1; cd $1; pwd`
+serial=$2
+
+( ( cd $directory 2>/dev/null && git status ) || ( openaps init $directory ) ) || die "Can't init $directory"
+cd $directory || die "Can't cd $directory"
+
+if [[ $# -lt 3 ]]; then
     max_iob=0
 else
-    max_iob=$2
+    max_iob=$3
 fi
+echo -n Setting up oref0 in $directory for pump $serial with max_iob $max_iob
+
+if [[ $# -gt 3 ]]; then
+	nightscout_url=$4
+    echo -n ", Nightscout URL $nightscout_url"
+fi
+echo
+
+read -p "Continue? " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+
 ( ! grep -q max_iob max_iob.json 2>/dev/null || [[ $max_iob != "0" ]] ) && echo "{ \"max_iob\": $max_iob }" > max_iob.json
 cat max_iob.json
 git add max_iob.json
 
-if [[ $# -gt 2 ]]; then
-	nightscout_url=$3
-fi
-
-if [[ $# -gt 3 ]]; then
-	azure_url=$4
-fi
-
 sudo cp ~/src/oref0/logrotate.openaps /etc/logrotate.d/openaps
 sudo cp ~/src/oref0/logrotate.rsyslog /etc/logrotate.d/rsyslog
 
-test -d /var/log/openaps || sudo mkdir /var/log/openaps && sudo chown pi /var/log/openaps
+test -d /var/log/openaps || sudo mkdir /var/log/openaps && sudo chown $USER /var/log/openaps
 
 openaps vendor add openapscontrib.timezones
 
@@ -74,8 +79,6 @@ grep tz /tmp/openaps-devices || openaps device add tz timezones || die "Can't ad
 git add tz.ini
 grep ns-upload /tmp/openaps-devices || openaps device add ns-upload process --require "pumphistory" ns-upload-entries || die "Can't add ns-upload"
 git add ns-upload.ini
-grep azure-upload /tmp/openaps-devices || openaps device add azure-upload process --require "iob enactedBasal bgreading webapi" oref0 sendtempbasal-Azure || die "Can't add sendtempbasal-Azure"
-git add azure-upload.ini
 
 # don't re-create reports if they already exist
 openaps report show 2>/dev/null > /tmp/openaps-reports
@@ -106,7 +109,6 @@ grep enact/enacted.json /tmp/openaps-reports || openaps report add enact/enacted
 # upload results
 ls upload 2>/dev/null >/dev/null || mkdir upload || die "Can't mkdir upload"
 grep upload/pebble.json /tmp/openaps-reports || openaps report add upload/pebble.json text pebble shell monitor/glucose.json monitor/iob.json settings/basal_profile.json monitor/temp_basal.json enact/suggested.json enact/enacted.json || die "Can't add oref0.json"
-#grep upload/azure-upload.json /tmp/openaps-reports || openaps report add upload/azure-upload.json text azure-upload shell monitor/iob.json enact/enacted.json monitor/glucose.json $azure_url || die "Can't add azure-upload.json"
 
 # don't re-create aliases if they already exist
 openaps alias show 2>/dev/null > /tmp/openaps-aliases
@@ -135,12 +137,18 @@ grep ^enact /tmp/openaps-aliases || openaps alias add enact '! bash -c "rm enact
 grep ^wait-loop /tmp/openaps-aliases || openaps alias add wait-loop '! bash -c "openaps preflight && openaps gather && openaps upload && openaps wait-for-bg && openaps enact"' || die "Can't add wait-loop"
 grep ^loop /tmp/openaps-aliases || openaps alias add loop '! bash -c "openaps preflight && openaps gather && openaps enact"' || die "Can't add loop"
 grep ^pebble /tmp/openaps-aliases || openaps alias add pebble '! bash -c "grep -q iob monitor/iob.json && openaps report invoke upload/pebble.json"' || die "Can't add pebble"
-#grep ^azure-upload /tmp/openaps-aliases || openaps alias add azure-upload "report invoke upload/azure-upload.json" || die "Can't add azure-upload"
 grep ^upload /tmp/openaps-aliases || openaps alias add upload '! bash -c "openaps report invoke enact/suggested.json; openaps pebble; openaps ns-upload"' || die "Can't add upload"
 grep ^retry-loop /tmp/openaps-aliases || openaps alias add retry-loop '! bash -c "openaps wait-loop || until( ! mm-stick warmup || ! openaps preflight || openaps loop); do sleep 10; done; openaps preflight && openaps upload"' || die "Can't add retry-loop"
 
-# add crontab entries
-(crontab -l; crontab -l | grep -q PATH || echo 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin') | crontab -
-(crontab -l; crontab -l | grep -q killall || echo '* * * * * killall --older-than 10m openaps') | crontab -
-(crontab -l; crontab -l | grep -q "reset-git" || echo '* * * * * cd ~/openaps-dev && oref0-reset-git') | crontab -
-(crontab -l; crontab -l | grep -q retry-loop || echo '* * * * * cd /home/pi/openaps-dev && ( ps aux | grep -v grep | grep -q "openaps retry-loop" && echo OpenAPS already running || openaps retry-loop ) 2>&1 | tee -a /var/log/openaps/loop.log') | crontab -
+read -p "Schedule openaps retry-loop in cron? " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    # add crontab entries
+    (crontab -l; crontab -l | grep -q PATH || echo 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin') | crontab -
+    (crontab -l; crontab -l | grep -q killall || echo '* * * * * killall --older-than 10m openaps') | crontab -
+    (crontab -l; crontab -l | grep -q "reset-git" || echo "* * * * * cd $directory && oref0-reset-git") | crontab -
+    (crontab -l; crontab -l | grep -q retry-loop || echo "* * * * * cd $directory && ( ps aux | grep -v grep | grep -q 'openaps retry-loop' && echo OpenAPS already running || openaps retry-loop ) 2>&1 | tee -a /var/log/openaps/loop.log") | crontab -
+    crontab -l
+fi
+
+fi
