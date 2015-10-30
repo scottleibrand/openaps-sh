@@ -79,6 +79,8 @@ grep tz /tmp/openaps-devices || openaps device add tz timezones || die "Can't ad
 git add tz.ini
 grep ns-upload /tmp/openaps-devices || openaps device add ns-upload process --require "pumphistory" ns-upload-entries || die "Can't add ns-upload"
 git add ns-upload.ini
+#grep latest-treatments /tmp/openaps-devices || openaps device add latest-treatments process nightscout 'latest-openaps-treatment $NIGHTSCOUT_HOST' || die "Can't add latest-treatments"
+#git add latest-treatments.ini
 
 # don't re-create reports if they already exist
 openaps report show 2>/dev/null > /tmp/openaps-reports
@@ -129,6 +131,12 @@ if [ $nightscout_url ]; then
     git add ns-glucose.ini
 	grep ns-glucose.json /tmp/openaps-reports || openaps report add monitor/ns-glucose.json text ns-glucose shell $sgv_url || die "Can't add ns-glucose.json"
 	grep ^get-ns-glucose /tmp/openaps-aliases || openaps alias add get-ns-glucose "report invoke monitor/ns-glucose.json" || die "Can't add get-ns-glucose"
+
+    # TODO: test these 3
+    grep ^latest-ns-treatment-time /tmp/openaps-aliases || openaps alias add latest-ns-treatment-time '! bash -c "nightscout latest-openaps-treatment $NIGHTSCOUT_HOST |json created_at"' || die "Can't add latest-ns-treatment-time"
+    grep ^format-latest-nightscout-treatments /tmp/openaps-aliases || openaps alias add format-latest-nightscout-treatments '! bash -c "nightscout cull-latest-openaps-treatments monitor/pump-history-zoned.json $(openaps latest-ns-treatment-time)"' || die "Can't add format-latest-nightscout-treatments"
+    grep ^upload-recent-treatments /tmp/openaps-aliases || openaps alias add upload-recent-treatments '! bash -c "test $(json -f upload/latest-treatments.json -a created_at eventType | wc -l ) -gt 0 && (openaps use ns-upload shell treatments.json upload/latest-treatments.json ) || echo \"No recent treatments to upload\""' || die "Can't add upload-recent-treatments"
+
     grep ^get-bg /tmp/openaps-aliases || openaps alias add get-bg '! bash -c "openaps monitor-cgm 2>/dev/null || ( openaps get-ns-glucose && mv monitor/ns-glucose.json monitor/glucose.json )"'
 else
     grep ^get-bg /tmp/openaps-aliases || openaps alias add get-bg "monitor-cgm"
