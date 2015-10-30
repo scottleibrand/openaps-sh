@@ -91,6 +91,7 @@ grep monitor/clock.json /tmp/openaps-reports || openaps report add monitor/clock
 grep monitor/temp_basal.json /tmp/openaps-reports || openaps report add monitor/temp_basal.json JSON pump read_temp_basal || die "Can't add temp_basal.json"
 grep monitor/reservoir.json /tmp/openaps-reports || openaps report add monitor/reservoir.json JSON pump reservoir || die "Can't add reservoir.json"
 grep monitor/pumphistory.json /tmp/openaps-reports || openaps report add monitor/pumphistory.json JSON pump iter_pump_hours 4 || die "Can't add pumphistory.json"
+grep monitor/pumphistory.zoned.json /tmp/openaps-reports || openaps report add monitor/pumphistory.zoned.json JSON tz rezone monitor/pumphistory.json || die "Can't add pumphistory.zoned.json"
 grep monitor/iob.json /tmp/openaps-reports || openaps report add monitor/iob.json text iob shell monitor/pumphistory.json settings/profile.json monitor/clock.json || die "Can't add iob.json"
 
 # add reports for infrequently-refreshed settings data
@@ -116,12 +117,12 @@ openaps alias show 2>/dev/null > /tmp/openaps-aliases
 grep ^invoke /tmp/openaps-aliases || openaps alias add invoke "report invoke" || die "Can't add invoke"
 grep ^preflight /tmp/openaps-aliases || openaps alias add preflight '! bash -c "rm -f monitor/clock.json && openaps report invoke monitor/clock.json 2>/dev/null && grep -q T monitor/clock.json && echo PREFLIGHT OK || ( mm-stick warmup || sudo oref0-reset-usb; echo PREFLIGHT FAIL; sleep 120; exit 1 )"' || die "Can't add preflight"
 grep ^monitor-cgm /tmp/openaps-aliases || openaps alias add monitor-cgm "report invoke monitor/glucose.json" || die "Can't add monitor-cgm"
-grep ^monitor-pump /tmp/openaps-aliases || openaps alias add monitor-pump "report invoke monitor/clock.json monitor/temp_basal.json monitor/pumphistory.json monitor/iob.json" || die "Can't add monitor-pump"
+grep ^monitor-pump /tmp/openaps-aliases || openaps alias add monitor-pump "report invoke monitor/clock.json monitor/temp_basal.json monitor/pumphistory.json monitor/pumphistory.zoned.json monitor/iob.json" || die "Can't add monitor-pump"
 grep ^get-settings /tmp/openaps-aliases || openaps alias add get-settings "report invoke settings/model.json settings/bg_targets.json settings/insulin_sensitivities.json settings/basal_profile.json settings/settings.json settings/profile.json" || die "Can't add get-settings"
 if [ $nightscout_url ]; then
     grep upload/ns-upload.json /tmp/openaps-reports || openaps report add upload/ns-upload.json text ns-upload shell monitor/pumphistory.json $nightscout_url || die "Can't add ns-upload.json"
     grep ^ns-upload /tmp/openaps-aliases || openaps alias add ns-upload "report invoke upload/ns-upload.json" || die "Can't add ns-upload"
-    grep ^ns-treatments /tmp/openaps-aliases || openaps alias add ns-treatments '! bash -c "mm-format-ns-treatments monitor/pumphistory.json settings/model.json upload/ns-treatments.json && ns-upload $NIGHTSCOUT_HOST $API_SECRET treatments.json upload/ns-treatments.json"' || die "Can't add ns-treatments"
+    grep ^ns-treatments /tmp/openaps-aliases || openaps alias add ns-treatments '! bash -c "mm-format-ns-treatments monitor/pumphistory.zoned.json settings/model.json upload/ns-treatments.json && ns-upload $NIGHTSCOUT_HOST $API_SECRET treatments.json upload/ns-treatments.json"' || die "Can't add ns-treatments"
 	sgv_url=$nightscout_url/api/v1/entries/sgv.json
 	grep ns-glucose /tmp/openaps-devices || openaps device add ns-glucose process --require nightscout_url "bash -c \"curl -s $sgv_url | json -e 'this.glucose = this.sgv'\"" || die "Can't add ns-glucose"
     git add ns-glucose.ini
