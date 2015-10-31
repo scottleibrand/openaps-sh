@@ -149,7 +149,7 @@ echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     # add crontab entries
     (crontab -l; crontab -l | grep -q PATH || echo 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin') | crontab -
-    (crontab -l; crontab -l | grep -q killall || echo '* * * * * killall --older-than 10m openaps') | crontab -
+    (crontab -l; crontab -l | grep -q killall || echo '* * * * * killall -g --older-than 10m openaps') | crontab -
     (crontab -l; crontab -l | grep -q "reset-git" || echo "* * * * * cd $directory && oref0-reset-git") | crontab -
     (crontab -l; crontab -l | grep -q retry-loop || echo "* * * * * cd $directory && ( ps aux | grep -v grep | grep -q 'openaps retry-loop' && echo OpenAPS already running || openaps retry-loop ) 2>&1 | tee -a /var/log/openaps/loop.log") | crontab -
     crontab -l
