@@ -96,7 +96,7 @@ grep monitor/temp_basal.json /tmp/openaps-reports || openaps report add monitor/
 grep monitor/reservoir.json /tmp/openaps-reports || openaps report add monitor/reservoir.json JSON pump reservoir || die "Can't add reservoir.json"
 grep monitor/pumphistory.json /tmp/openaps-reports || openaps report add monitor/pumphistory.json JSON pump iter_pump_hours 4 || die "Can't add pumphistory.json"
 grep monitor/pumphistory-zoned.json /tmp/openaps-reports || openaps report add monitor/pumphistory-zoned.json JSON tz rezone monitor/pumphistory.json || die "Can't add pumphistory-zoned.json"
-grep monitor/iob.json /tmp/openaps-reports || openaps report add monitor/iob.json text iob shell monitor/pumphistory.json settings/profile.json monitor/clock.json || die "Can't add iob.json"
+grep monitor/iob.json /tmp/openaps-reports || openaps report add monitor/iob.json text iob shell monitor/pumphistory-zoned.json settings/profile.json monitor/clock-zoned.json || die "Can't add iob.json"
 
 # add reports for infrequently-refreshed settings data
 ls settings 2>/dev/null >/dev/null || mkdir settings || die "Can't mkdir settings"
@@ -123,7 +123,7 @@ grep ^invoke /tmp/openaps-aliases || openaps alias add invoke "report invoke" ||
 grep ^preflight /tmp/openaps-aliases || openaps alias add preflight '! bash -c "rm -f monitor/clock.json && openaps report invoke monitor/clock.json 2>/dev/null && grep -q T monitor/clock.json && echo PREFLIGHT OK || ( mm-stick warmup || sudo oref0-reset-usb; echo PREFLIGHT FAIL; sleep 120; exit 1 )"' || die "Can't add preflight"
 grep ^monitor-cgm /tmp/openaps-aliases || openaps alias add monitor-cgm "report invoke monitor/glucose.json" || die "Can't add monitor-cgm"
 grep ^get-ns-glucose /tmp/openaps-aliases || openaps alias add get-ns-glucose "report invoke monitor/ns-glucose.json" || die "Can't add get-ns-glucose"
-grep ^monitor-pump /tmp/openaps-aliases || openaps alias add monitor-pump "report invoke monitor/clock.json monitor/temp_basal.json monitor/pumphistory.json monitor/pumphistory-zoned.json monitor/iob.json" || die "Can't add monitor-pump"
+grep ^monitor-pump /tmp/openaps-aliases || openaps alias add monitor-pump "report invoke monitor/clock.json monitor/temp_basal.json monitor/pumphistory.json monitor/pumphistory-zoned.json monitor/clock-zoned.json monitor/iob.json" || die "Can't add monitor-pump"
 grep ^get-settings /tmp/openaps-aliases || openaps alias add get-settings "report invoke settings/model.json settings/bg_targets.json settings/insulin_sensitivities.json settings/basal_profile.json settings/settings.json settings/profile.json" || die "Can't add get-settings"
 grep ^get-bg /tmp/openaps-aliases || openaps alias add get-bg '! bash -c "openaps monitor-cgm 2>/dev/null || ( openaps get-ns-glucose && mv monitor/ns-glucose.json monitor/glucose.json )"'
 grep ^gather /tmp/openaps-aliases || openaps alias add gather '! bash -c "rm monitor/*; ( openaps get-bg && openaps get-settings && openaps monitor-pump ) 2>/dev/null"' || die "Can't add gather"
