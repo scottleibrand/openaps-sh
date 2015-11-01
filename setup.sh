@@ -126,7 +126,7 @@ grep ^get-ns-glucose /tmp/openaps-aliases || openaps alias add get-ns-glucose "r
 grep ^monitor-pump /tmp/openaps-aliases || openaps alias add monitor-pump "report invoke monitor/clock.json monitor/temp_basal.json monitor/pumphistory.json monitor/pumphistory-zoned.json monitor/clock-zoned.json monitor/iob.json" || die "Can't add monitor-pump"
 grep ^get-settings /tmp/openaps-aliases || openaps alias add get-settings "report invoke settings/model.json settings/bg_targets.json settings/insulin_sensitivities.json settings/basal_profile.json settings/settings.json settings/profile.json" || die "Can't add get-settings"
 grep ^get-bg /tmp/openaps-aliases || openaps alias add get-bg '! bash -c "openaps monitor-cgm 2>/dev/null || ( openaps get-ns-glucose && mv monitor/ns-glucose.json monitor/glucose.json )"'
-grep ^gather /tmp/openaps-aliases || openaps alias add gather '! bash -c "rm monitor/*; ( openaps get-bg && openaps get-settings && openaps monitor-pump ) 2>/dev/null"' || die "Can't add gather"
+grep ^gather /tmp/openaps-aliases || openaps alias add gather '! bash -c "rm monitor/*; ( openaps get-bg && openaps get-settings >/dev/null && openaps monitor-pump ) 2>/dev/null"' || die "Can't add gather"
 grep ^wait-for-bg /tmp/openaps-aliases || openaps alias add wait-for-bg '! bash -c "cp monitor/glucose.json monitor/last-glucose.json; while(diff -q monitor/last-glucose.json monitor/glucose.json); do echo -n .; openaps get-bg >/dev/null; sleep 10; done"'
 
 # add aliases to enact and loop
