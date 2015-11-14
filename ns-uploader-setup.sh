@@ -19,18 +19,14 @@ die() {
   exit 1
 }
 
+self=$(basename $0)
 if [[ $# -lt 2 ]]; then
-    openaps device show pump 2>/dev/null >/dev/null || die "Usage: setup.sh <directory> <pump serial #> [max_iob]"
+    openaps device show pump 2>/dev/null >/dev/null || die "Usage: $self <directory> <pump serial #>"
 fi
 directory=`mkdir -p $1; cd $1; pwd`
 serial=$2
 
-if [[ $# -lt 3 ]]; then
-    max_iob=0
-else
-    max_iob=$3
-fi
-echo -n Setting up oref0 in $directory for pump $serial with max_iob $max_iob
+echo -n Setting up oref0 in $directory for pump $serial
 
 if [[ $# -gt 3 ]]; then
 	diyps_url=$4
@@ -44,10 +40,6 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
 
 ( ( cd $directory 2>/dev/null && git status ) || ( openaps init $directory ) ) || die "Can't init $directory"
 cd $directory || die "Can't cd $directory"
-
-( ! grep -q max_iob max_iob.json 2>/dev/null || [[ $max_iob != "0" ]] ) && echo "{ \"max_iob\": $max_iob }" > max_iob.json
-cat max_iob.json
-git add max_iob.json
 
 sudo cp ~/src/oref0/logrotate.openaps /etc/logrotate.d/openaps
 sudo cp ~/src/oref0/logrotate.rsyslog /etc/logrotate.d/rsyslog
@@ -71,8 +63,6 @@ grep oref0 /tmp/openaps-devices || openaps device add oref0 process oref0 || die
 git add oref0.ini
 grep iob /tmp/openaps-devices || openaps device add iob process --require "pumphistory profile clock" oref0 calculate-iob || die "Can't add iob"
 git add iob.ini
-grep get-profile /tmp/openaps-devices || openaps device add get-profile process --require "settings bg_targets isf basal_profile max_iob" oref0 get-profile || die "Can't add get-profile"
-git add get-profile.ini
 grep determine-basal /tmp/openaps-devices || openaps device add determine-basal process --require "iob temp_basal glucose profile" oref0 determine-basal || die "Can't add determine-basal"
 git add determine-basal.ini
 grep tz /tmp/openaps-devices || openaps device add tz timezones || die "Can't add tz"
@@ -102,14 +92,13 @@ grep settings/bg_targets.json /tmp/openaps-reports || openaps report add setting
 grep settings/insulin_sensitivities.json /tmp/openaps-reports || openaps report add settings/insulin_sensitivities.json JSON pump read_insulin_sensitivities || die "Can't add insulin_sensitivities.json"
 grep settings/basal_profile.json /tmp/openaps-reports || openaps report add settings/basal_profile.json JSON pump read_selected_basal_profile || die "Can't add basal_profile.json"
 grep settings/settings.json /tmp/openaps-reports || openaps report add settings/settings.json JSON pump read_settings || die "Can't add settings.json"
-grep settings/profile.json /tmp/openaps-reports || openaps report add settings/profile.json text get-profile shell settings/settings.json settings/bg_targets.json settings/insulin_sensitivities.json settings/basal_profile.json max_iob.json || die "Can't add profile.json"
 
 # add aliases to get data
 openaps alias add invoke "report invoke" || die "Can't add invoke"
 openaps alias add preflight '! bash -c "rm -f monitor/clock.json && openaps report invoke monitor/clock.json 2>/dev/null && grep -q T monitor/clock.json && echo PREFLIGHT OK || ( mm-stick warmup || sudo oref0-reset-usb; echo PREFLIGHT FAIL; sleep 120; exit 1 )"' || die "Can't add preflight"
 openaps alias add monitor-cgm "report invoke monitor/glucose.json" || die "Can't add monitor-cgm"
 openaps alias add get-ns-glucose "report invoke monitor/ns-glucose.json" || die "Can't add get-ns-glucose"
-openaps alias add monitor-pump "report invoke monitor/clock.json monitor/temp_basal.json monitor/pumphistory.json monitor/pumphistory-zoned.json monitor/clock-zoned.json monitor/iob.json" || die "Can't add monitor-pump"
+openaps alias add monitor-pump "report invoke monitor/clock.json monitor/temp_basal.json monitor/pumphistory.json monitor/pumphistory-zoned.json monitor/clock-zoned.json" || die "Can't add monitor-pump"
 openaps alias add get-settings "report invoke settings/model.json settings/bg_targets.json settings/insulin_sensitivities.json settings/basal_profile.json settings/settings.json settings/profile.json" || die "Can't add get-settings"
 openaps alias add get-bg '! bash -c "openaps monitor-cgm 2>/dev/null || ( openaps get-ns-glucose && grep -q glucose monitor/ns-glucose.json && mv monitor/ns-glucose.json monitor/glucose.json )"' || die "Can't add get-bg"
 openaps alias add gather '! bash -c "rm monitor/*; ( openaps get-bg && openaps get-settings >/dev/null && openaps monitor-pump ) 2>/dev/null"' || die "Can't add gather"
