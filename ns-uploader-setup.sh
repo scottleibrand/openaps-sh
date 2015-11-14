@@ -63,8 +63,6 @@ grep oref0 /tmp/openaps-devices || openaps device add oref0 process oref0 || die
 git add oref0.ini
 grep iob /tmp/openaps-devices || openaps device add iob process --require "pumphistory profile clock" oref0 calculate-iob || die "Can't add iob"
 git add iob.ini
-grep determine-basal /tmp/openaps-devices || openaps device add determine-basal process --require "iob temp_basal glucose profile" oref0 determine-basal || die "Can't add determine-basal"
-git add determine-basal.ini
 grep tz /tmp/openaps-devices || openaps device add tz timezones || die "Can't add tz"
 git add tz.ini
 #grep latest-treatments /tmp/openaps-devices || openaps device add latest-treatments process nightscout 'latest-openaps-treatment $NIGHTSCOUT_HOST' || die "Can't add latest-treatments"
