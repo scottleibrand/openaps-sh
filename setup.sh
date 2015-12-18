@@ -71,9 +71,11 @@ grep oref0 /tmp/openaps-devices || openaps device add oref0 process oref0 || die
 git add oref0.ini
 grep iob /tmp/openaps-devices || openaps device add iob process --require "pumphistory profile clock" oref0 calculate-iob || die "Can't add iob"
 git add iob.ini
-grep get-profile /tmp/openaps-devices || openaps device add get-profile process --require "settings bg_targets isf basal_profile max_iob" oref0 get-profile || die "Can't add get-profile"
+grep meal /tmp/openaps-devices || openaps device add meal process --require "pumphistory profile clock" oref0 meal || die "Can't add meal"
+git add meal.ini
+grep get-profile /tmp/openaps-devices || openaps device add get-profile process --require "settings bg_targets isf basal_profile max_iob carb_ratios" oref0 get-profile || die "Can't add get-profile"
 git add get-profile.ini
-grep determine-basal /tmp/openaps-devices || openaps device add determine-basal process --require "iob temp_basal glucose profile" oref0 determine-basal || die "Can't add determine-basal"
+grep determine-basal /tmp/openaps-devices || openaps device add determine-basal process --require "iob temp_basal glucose profile offline meal" oref0 determine-basal || die "Can't add determine-basal"
 git add determine-basal.ini
 grep pebble /tmp/openaps-devices || openaps device add pebble process --require "glucose iob basal_profile temp_basal suggested enacted" oref0 pebble || die "Can't add pebble"
 git add pebble.ini
@@ -97,18 +99,20 @@ grep monitor/reservoir.json /tmp/openaps-reports || openaps report add monitor/r
 grep monitor/pumphistory.json /tmp/openaps-reports || openaps report add monitor/pumphistory.json JSON pump iter_pump_hours 4 || die "Can't add pumphistory.json"
 grep monitor/pumphistory-zoned.json /tmp/openaps-reports || openaps report add monitor/pumphistory-zoned.json JSON tz rezone monitor/pumphistory.json || die "Can't add pumphistory-zoned.json"
 grep monitor/iob.json /tmp/openaps-reports || openaps report add monitor/iob.json text iob shell monitor/pumphistory-zoned.json settings/profile.json monitor/clock-zoned.json || die "Can't add iob.json"
+grep monitor/meal.json /tmp/openaps-reports || openaps report add monitor/meal.json text meal shell monitor/pumphistory-zoned.json settings/profile.json monitor/clock-zoned.json || die "Can't add meal.json"
 
 # add reports for infrequently-refreshed settings data
 ls settings 2>/dev/null >/dev/null || mkdir settings || die "Can't mkdir settings"
 grep settings/bg_targets.json /tmp/openaps-reports || openaps report add settings/bg_targets.json JSON pump read_bg_targets || die "Can't add bg_targets.json"
 grep settings/insulin_sensitivities.json /tmp/openaps-reports || openaps report add settings/insulin_sensitivities.json JSON pump read_insulin_sensitivities || die "Can't add insulin_sensitivities.json"
+grep settings/carb_ratios.json /tmp/openaps-reports || openaps report add settings/carb_ratios.json JSON pump read_carb_ratios || die "Can't add carb_ratios.json"
 grep settings/basal_profile.json /tmp/openaps-reports || openaps report add settings/basal_profile.json JSON pump read_selected_basal_profile || die "Can't add basal_profile.json"
 grep settings/settings.json /tmp/openaps-reports || openaps report add settings/settings.json JSON pump read_settings || die "Can't add settings.json"
-grep settings/profile.json /tmp/openaps-reports || openaps report add settings/profile.json text get-profile shell settings/settings.json settings/bg_targets.json settings/insulin_sensitivities.json settings/basal_profile.json max_iob.json || die "Can't add profile.json"
+grep settings/profile.json /tmp/openaps-reports || openaps report add settings/profile.json text get-profile shell settings/settings.json settings/bg_targets.json settings/insulin_sensitivities.json settings/basal_profile.json max_iob.json settings/carb_ratios.json || die "Can't add profile.json"
 
 # add suggest and enact reports
 ls enact 2>/dev/null >/dev/null || mkdir enact || die "Can't mkdir enact"
-grep enact/suggested.json /tmp/openaps-reports || openaps report add enact/suggested.json text determine-basal shell monitor/iob.json monitor/temp_basal.json monitor/glucose.json settings/profile.json || die "Can't add suggested.json"
+grep enact/suggested.json /tmp/openaps-reports || openaps report add enact/suggested.json text determine-basal shell monitor/iob.json monitor/temp_basal.json monitor/glucose.json settings/profile.json online monitor/meal.json || die "Can't add suggested.json"
 grep enact/enacted.json /tmp/openaps-reports || openaps report add enact/enacted.json JSON pump set_temp_basal enact/suggested.json || die "Can't add enacted.json"
 
 # upload results
@@ -120,10 +124,10 @@ openaps alias show 2>/dev/null > /tmp/openaps-aliases
 
 # add aliases to get data
 openaps alias add invoke "report invoke" || die "Can't add invoke"
-openaps alias add preflight '! bash -c "rm -f monitor/clock.json && openaps report invoke monitor/clock.json 2>/dev/null && grep -q T monitor/clock.json && echo PREFLIGHT OK || ( mm-stick warmup || sudo oref0-reset-usb; echo PREFLIGHT FAIL; sleep 120; exit 1 )"' || die "Can't add preflight"
+openaps alias add preflight '! bash -c "rm -f monitor/clock.json && openaps report invoke monitor/clock.json >/dev/null 2>/dev/null && grep -q T monitor/clock.json && echo PREFLIGHT OK || ( mm-stick warmup || sudo oref0-reset-usb; echo PREFLIGHT FAIL; sleep 120; exit 1 )"' || die "Can't add preflight"
 openaps alias add monitor-cgm "report invoke monitor/glucose.json" || die "Can't add monitor-cgm"
 openaps alias add get-ns-glucose "report invoke monitor/ns-glucose.json" || die "Can't add get-ns-glucose"
-openaps alias add monitor-pump "report invoke monitor/clock.json monitor/temp_basal.json monitor/pumphistory.json monitor/pumphistory-zoned.json monitor/clock-zoned.json monitor/iob.json" || die "Can't add monitor-pump"
+openaps alias add monitor-pump "report invoke monitor/clock.json monitor/temp_basal.json monitor/pumphistory.json monitor/pumphistory-zoned.json monitor/clock-zoned.json monitor/iob.json monitor/meal.json" || die "Can't add monitor-pump"
 openaps alias add get-settings "report invoke settings/model.json settings/bg_targets.json settings/insulin_sensitivities.json settings/basal_profile.json settings/settings.json settings/profile.json" || die "Can't add get-settings"
 openaps alias add get-bg '! bash -c "openaps monitor-cgm 2>/dev/null || ( openaps get-ns-glucose && grep -q glucose monitor/ns-glucose.json && mv monitor/ns-glucose.json monitor/glucose.json )"' || die "Can't add get-bg"
 openaps alias add gather '! bash -c "rm monitor/*; ( openaps get-bg && openaps get-settings >/dev/null && openaps monitor-pump ) 2>/dev/null"' || die "Can't add gather"
@@ -142,7 +146,7 @@ openaps alias add upload-pumphistory-entries '! bash -c "openaps prep-pumphistor
 openaps alias add latest-ns-treatment-time '! bash -c "nightscout latest-openaps-treatment $NIGHTSCOUT_HOST | json created_at"' || die "Can't add latest-ns-treatment-time"
 openaps alias add format-latest-nightscout-treatments '! bash -c "nightscout cull-latest-openaps-treatments monitor/pumphistory-zoned.json settings/model.json $(openaps latest-ns-treatment-time) > upload/latest-treatments.json"' || die "Can't add format-latest-nightscout-treatments"
 openaps alias add upload-recent-treatments '! bash -c "openaps format-latest-nightscout-treatments && test $(json -f upload/latest-treatments.json -a created_at eventType | wc -l ) -gt 0 && (ns-upload $NIGHTSCOUT_HOST $API_SECRET treatments.json upload/latest-treatments.json ) || echo \"No recent treatments to upload\""' || die "Can't add upload-recent-treatments"
-openaps alias add upload '! bash -c "openaps report invoke enact/suggested.json; openaps pebble; ( openaps upload-pumphistory-entries; openaps upload-recent-treatments ) >/dev/null"' || die "Can't add upload"
+openaps alias add upload '! bash -c "( openaps report invoke enact/suggested.json; openaps pebble; openaps upload-pumphistory-entries; openaps upload-recent-treatments ) >/dev/null"' || die "Can't add upload"
 
 read -p "Schedule openaps retry-loop in cron? " -n 1 -r
 echo
