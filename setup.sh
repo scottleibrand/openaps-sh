@@ -141,7 +141,7 @@ openaps alias add wait-for-bg '! bash -c "cp monitor/glucose.json monitor/last-g
 # add aliases to enact and loop
 openaps alias add enact '! bash -c "rm enact/suggested.json; openaps invoke enact/suggested.json && if (cat enact/suggested.json && grep -q duration enact/suggested.json); then openaps invoke enact/enacted.json || openaps invoke enact/enacted.json && cat enact/enacted.json; else echo No action required; fi"' || die "Can't add enact"
 openaps alias add wait-loop '! bash -c "openaps preflight && openaps gather && openaps enact && openaps upload && openaps get-settings >/dev/null && openaps wait-for-bg && openaps enact && openaps upload"' || die "Can't add wait-loop"
-openaps alias add loop '! bash -c "openaps preflight && openaps gather && openaps get-settings >/dev/null && openaps enact ; openaps upload"' || die "Can't add loop"
+openaps alias add loop '! bash -c "openaps preflight && openaps gather && openaps get-settings >/dev/null && openaps enact; openaps upload"' || die "Can't add loop"
 openaps alias add retry-loop '! bash -c "openaps wait-loop || until( ! mm-stick warmup || ! openaps preflight || openaps loop); do sleep 10; done"' || die "Can't add retry-loop"
 
 # add aliases to upload results
