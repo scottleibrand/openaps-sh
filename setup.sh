@@ -126,7 +126,7 @@ openaps alias show 2>/dev/null > /tmp/openaps-aliases
 
 # add aliases to get data
 openaps alias add invoke "report invoke" || die "Can't add invoke"
-openaps alias add preflight '! bash -c "rm -f monitor/clock.json && echo -n \"PREFLIGHT \" && openaps report invoke monitor/clock.json 2>/dev/null >/dev/null && grep -q T monitor/clock.json && echo OK || ( mm-stick warmup || sudo oref0-reset-usb; echo FAIL; openaps get-bg; sleep 120; exit 1 )"' || die "Can't add preflight"
+openaps alias add preflight '! bash -c "rm -f monitor/clock.json && echo -n \"PREFLIGHT \" && openaps report invoke monitor/clock.json 2>/dev/null >/dev/null && grep -q T monitor/clock.json && echo OK || ( ( mm-stick warmup 2>&1 || sudo oref0-reset-usb ) | grep -v line; echo FAIL; openaps get-bg; sleep 120; exit 1 )"' || die "Can't add preflight"
 openaps alias add monitor-cgm "report invoke monitor/cgm-glucose.json" || die "Can't add monitor-cgm"
 openaps alias add get-ns-glucose "report invoke monitor/ns-glucose.json" || die "Can't add get-ns-glucose"
 openaps alias add monitor-pump "report invoke monitor/clock.json monitor/temp_basal.json monitor/pumphistory.json monitor/pumphistory-zoned.json monitor/clock-zoned.json monitor/iob.json monitor/meal.json monitor/reservoir.json monitor/battery.json monitor/status.json" || die "Can't add monitor-pump"
@@ -135,13 +135,13 @@ openaps alias add monitor-pump "report invoke monitor/clock.json monitor/temp_ba
 openaps alias add ns-meal-carbs '! bash -c "egrep -q carbs.:0, monitor/meal.json && curl -m 30 -s \"$NIGHTSCOUT_HOST/api/v1/treatments.json?find\[created_at\]\[\$gte\]=`date -d \"3 hours ago\" -Iminutes`&find\[carbs\]\[\$exists\]=true\" > monitor/carbhistory.json && oref0-meal monitor/pumphistory-zoned.json settings/profile.json monitor/clock-zoned.json monitor/carbhistory.json > monitor/meal.json; return 0"'
 openaps alias add get-settings "report invoke settings/model.json settings/bg_targets.json settings/insulin_sensitivities.json settings/basal_profile.json settings/settings.json settings/carb_ratios.json settings/profile.json" || die "Can't add get-settings"
 openaps alias add get-bg '! bash -c "( openaps monitor-cgm 2>/dev/null && grep -q glucose monitor/cgm-glucose.json && rsync -rtu monitor/cgm-glucose.json monitor/glucose.json && rsync -rtu monitor/cgm-glucose.json glucose.json ) || ( find glucose.json -mmin -5 | egrep -q glucose && rsync -rtu glucose.json monitor/glucose.json && echo Copied glucose.json to monitor/glucose.json ) || ( openaps get-ns-glucose && grep -q glucose monitor/ns-glucose.json && mv monitor/ns-glucose.json monitor/glucose.json )"' || die "Can't add get-bg"
-openaps alias add gather '! bash -c "rm monitor/*; ( openaps get-bg | egrep \"reporting|Copied\" && echo -n Re && openaps monitor-pump >/dev/null && echo -n fresh && ( openaps ns-meal-carbs; echo ed: ) && ls -C monitor/ ) 2>/dev/null"' || die "Can't add gather"
+openaps alias add gather '! bash -c "rm monitor/*; ( openaps get-bg | egrep \"reporting|Copied\" && echo -n Re && openaps monitor-pump >/dev/null && echo -n fresh && ( openaps ns-meal-carbs && echo ed ) ) 2>/dev/null"' || die "Can't add gather"
 openaps alias add wait-for-bg '! bash -c "cp monitor/glucose.json monitor/last-glucose.json; while(diff -q monitor/last-glucose.json monitor/glucose.json); do echo -n .; sleep 10; openaps get-bg >/dev/null; done"'
 
 # add aliases to enact and loop
-openaps alias add enact '! bash -c "rm enact/suggested.json; openaps invoke enact/suggested.json && if (cat enact/suggested.json && grep -q duration enact/suggested.json); then openaps invoke enact/enacted.json || openaps invoke enact/enacted.json && cat enact/enacted.json; else echo No action required; fi"' || die "Can't add enact"
-openaps alias add wait-loop '! bash -c "openaps preflight && openaps gather && openaps enact && openaps upload && openaps get-settings >/dev/null && openaps wait-for-bg && openaps enact && openaps upload-ns-status >/dev/null"' || die "Can't add wait-loop"
-openaps alias add loop '! bash -c "openaps preflight && openaps gather && openaps get-settings >/dev/null && openaps enact; openaps upload"' || die "Can't add loop"
+openaps alias add enact '! bash -c "rm enact/suggested.json; openaps invoke enact/suggested.json && if (cat enact/suggested.json && grep -q duration enact/suggested.json); then ( openaps invoke enact/enacted.json || openaps invoke enact/enacted.json ) 2>&1 | grep -v \", line \" && cat enact/enacted.json; else echo No action required; fi"' || die "Can't add enact"
+openaps alias add wait-loop '! bash -c "openaps preflight && openaps gather && openaps enact && openaps upload && openaps get-settings 2>&1 >/dev/null && openaps wait-for-bg && openaps enact && openaps upload-ns-status >/dev/null"' || die "Can't add wait-loop"
+openaps alias add loop '! bash -c "openaps preflight && openaps gather && openaps get-settings 2>&1 >/dev/null && openaps enact; openaps upload"' || die "Can't add loop"
 openaps alias add retry-loop '! bash -c "openaps wait-loop || until( ! mm-stick warmup || ! openaps preflight || openaps loop); do sleep 10; done"' || die "Can't add retry-loop"
 
 # add aliases to upload results
