@@ -54,7 +54,7 @@ sudo cp ~/src/oref0/logrotate.rsyslog /etc/logrotate.d/rsyslog
 test -d /var/log/openaps || sudo mkdir /var/log/openaps && sudo chown $USER /var/log/openaps
 
 openaps vendor add openapscontrib.timezones
-openaps vendor add openxshareble
+#openaps vendor add openxshareble
 
 # don't re-create devices if they already exist
 openaps device show 2>/dev/null > /tmp/openaps-devices
@@ -65,9 +65,9 @@ git add .gitignore
 grep pump /tmp/openaps-devices || openaps device add pump medtronic $serial || die "Can't add pump"
 grep cgm /tmp/openaps-devices || openaps device add cgm dexcom || die "Can't add CGM"
 git add cgm.ini
-grep share /tmp/openaps-devices || openaps device add share openxshareble || die "Can't add Share"
-openaps use share configure --serial $share_serial
-git add share.ini
+#grep share /tmp/openaps-devices || openaps device add share openxshareble || die "Can't add Share"
+#openaps use share configure --serial $share_serial
+#git add share.ini
 grep ns-glucose /tmp/openaps-devices || openaps device add ns-glucose process 'bash -c "curl -m 30 -s $NIGHTSCOUT_HOST/api/v1/entries/sgv.json | json -e \"this.glucose = this.sgv\""' || die "Can't add ns-glucose"
 git add ns-glucose.ini
 grep oref0 /tmp/openaps-devices || openaps device add oref0 process oref0 || die "Can't add oref0"
@@ -93,7 +93,7 @@ openaps report show 2>/dev/null > /tmp/openaps-reports
 # add reports for frequently-refreshed monitoring data
 ls monitor 2>/dev/null >/dev/null || mkdir monitor || die "Can't mkdir monitor"
 grep monitor/cgm-glucose.json /tmp/openaps-reports || openaps report add monitor/cgm-glucose.json JSON cgm iter_glucose 5 || die "Can't add cgm-glucose.json"
-grep monitor/share-glucose.json /tmp/openaps-reports || openaps report add monitor/share-glucose.json JSON share iter_glucose 5 || die "Can't add share-glucose.json"
+#grep monitor/share-glucose.json /tmp/openaps-reports || openaps report add monitor/share-glucose.json JSON share iter_glucose 5 || die "Can't add share-glucose.json"
 grep monitor/ns-glucose.json /tmp/openaps-reports || openaps report add monitor/ns-glucose.json text ns-glucose shell || die "Can't add ns-glucose.json"
 grep settings/model.json /tmp/openaps-reports || openaps report add settings/model.json JSON pump model || die "Can't add model"
 grep monitor/clock.json /tmp/openaps-reports || openaps report add monitor/clock.json JSON pump read_clock || die "Can't add clock.json"
@@ -132,7 +132,7 @@ openaps alias show 2>/dev/null > /tmp/openaps-aliases
 openaps alias add invoke "report invoke" || die "Can't add invoke"
 openaps alias add preflight '! bash -c "rm -f monitor/clock.json && echo -n \"PREFLIGHT \" && openaps report invoke monitor/clock.json 2>/dev/null >/dev/null && grep -q T monitor/clock.json && echo OK || ( ( mm-stick warmup 2>&1 || sudo oref0-reset-usb ) | egrep -v \"^  \"; echo FAIL; openaps get-bg; sleep 120; exit 1 )"' || die "Can't add preflight"
 openaps alias add monitor-cgm "report invoke monitor/cgm-glucose.json" || die "Can't add monitor-cgm"
-openaps alias add monitor-share "report invoke monitor/share-glucose.json" || die "Can't add monitor-share"
+#openaps alias add monitor-share "report invoke monitor/share-glucose.json" || die "Can't add monitor-share"
 openaps alias add get-ns-glucose "report invoke monitor/ns-glucose.json" || die "Can't add get-ns-glucose"
 openaps alias add monitor-pump "report invoke monitor/clock.json monitor/temp_basal.json monitor/pumphistory.json monitor/pumphistory-zoned.json monitor/clock-zoned.json monitor/iob.json monitor/meal.json monitor/reservoir.json monitor/battery.json monitor/status.json" || die "Can't add monitor-pump"
 #openaps alias add fix-history '! bash -c "sed -i \"s/2000-/2016-/g\" monitor/pumphistory.json monitor/clock.json"'
