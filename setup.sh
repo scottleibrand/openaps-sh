@@ -132,7 +132,7 @@ openaps alias show 2>/dev/null > /tmp/openaps-aliases
 
 # add aliases to get data
 openaps alias add invoke "report invoke" || die "Can't add invoke"
-openaps alias add mmtune '! bash -c "cd ~/src/minimed_rf/ && ruby -I lib bin/mmtune /dev/serial/by-id/usb-Nightscout_subg_rfspy_000002-if00 530201 | egrep -v \"rssi:0.0|OK|Ver|Open\""'
+openaps alias add mmtune "! bash -c \"cd ~/src/minimed_rf/ && ruby -I lib bin/mmtune /deverial/by-id/usb-Nightscout_subg_rfspy_000002-if00 $serial | egrep -v 'rssi:0.0|OK|Ver|Open'\""
 #openaps alias add preflight '! bash -c "rm -f monitor/clock.json && echo -n \"PREFLIGHT \" && openaps report invoke monitor/clock.json 2>/dev/null >/dev/null && grep -q T monitor/clock.json && echo OK || ( echo FAIL; openaps get-bg; sleep 120; exit 1 )"' || die "Can't add preflight"
 openaps alias add preflight '! bash -c "rm -f monitor/clock.json && openaps mmtune && echo -n \"PREFLIGHT \" && openaps report invoke monitor/clock.json 2>/dev/null >/dev/null && grep -q T monitor/clock.json && echo OK || ( echo FAIL; openaps get-bg; sleep 120; exit 1 )"' || die "Can't add preflight"
 openaps alias add monitor-cgm "report invoke monitor/cgm-glucose.json" || die "Can't add monitor-cgm"
@@ -149,7 +149,7 @@ openaps alias add gather '! bash -c "rm monitor/*; ( openaps get-bg | egrep \"re
 openaps alias add wait-for-bg '! bash -c "cp monitor/glucose.json monitor/last-glucose.json; while(diff -q monitor/last-glucose.json monitor/glucose.json); do echo -n .; sleep 10; openaps get-bg >/dev/null; done"'
 
 # add aliases to enact and loop
-openaps alias add enact '! bash -c "rm enact/suggested.json; openaps invoke enact/suggested.json && if (cat enact/suggested.json && grep -q duration enact/suggested.json); then ( rm enact/enacted.json; openaps invoke enact/enacted.json || openaps invoke enact/enacted.json || openaps invoke enact/enacted.json ) 2>&1 | egrep -v \"^  \" && cat enact/enacted.json | json -e \"if(this.duration === this.requested.duration){ this.recieved = true }\" | tee enact/enacted.json; else echo No action required; fi"' || die "Can't add enact"
+openaps alias add enact '! bash -c "rm enact/suggested.json; openaps invoke enact/suggested.json && if (cat enact/suggested.json && grep -q duration enact/suggested.json); then ( rm enact/enacted.json; openaps invoke enact/enacted.json || openaps invoke enact/enacted.json; grep -q duration enact/enacted.json || openaps invoke enact/enacted.json ) 2>&1 | egrep -v \"^  \" && cat enact/enacted.json | json -e \"if(this.duration === this.requested.duration){ this.recieved = true }\" | tee enact/enacted.json; else echo No action required; fi"' || die "Can't add enact"
 openaps alias add wait-loop '! bash -c "openaps preflight && openaps gather && openaps enact && openaps report invoke monitor/temp_basal.json 2>/dev/null >/dev/null && openaps upload && openaps get-settings 2>/dev/null >/dev/null && openaps wait-for-bg && openaps enact && openaps upload-ns-status >/dev/null"' || die "Can't add wait-loop"
 openaps alias add loop '! bash -c "openaps preflight && openaps gather && openaps get-settings 2>/dev/null >/dev/null && openaps enact; openaps upload"' || die "Can't add loop"
 openaps alias add retry-loop '! bash -c "openaps wait-loop || until( ! mm-stick warmup 2>&1 | egrep -v \"^  \" || ! openaps preflight || openaps loop); do sleep 10; done"' || die "Can't add retry-loop"
@@ -163,7 +163,7 @@ openaps alias add format-latest-nightscout-treatments '! bash -c "nightscout cul
 openaps alias add upload-recent-treatments '! bash -c "openaps format-latest-nightscout-treatments && test $(json -f upload/latest-treatments.json -a created_at eventType | wc -l ) -gt 0 && (ns-upload $NIGHTSCOUT_HOST $API_SECRET treatments.json upload/latest-treatments.json ) || echo \"No recent treatments to upload\""' || die "Can't add upload-recent-treatments"
 openaps alias add format-ns-status '! bash -c "ns-status monitor/clock-zoned.json monitor/iob.json enact/suggested.json enact/enacted.json monitor/battery.json monitor/reservoir.json monitor/status.json > upload/ns-status.json"' || die "Can't add format-ns-status"
 openaps alias add upload-ns-status '! bash -c "grep -q iob monitor/iob.json && grep -q absolute enact/suggested.json && openaps format-ns-status && grep -q iob upload/ns-status.json && ns-upload $NIGHTSCOUT_HOST $API_SECRET devicestatus.json upload/ns-status.json"' || die "Can't add upload-ns-status"
-openaps alias add upload '! bash -c "echo -n Upload && ( openaps upload-ns-status; openaps report invoke enact/suggested.json 2>/dev/null; openaps pebble; openaps upload-pumphistory-entries; openaps upload-recent-treatments ) >/dev/null && echo ed"' || die "Can't add upload"
+openaps alias add upload '! bash -c "echo -n Upload && ( openaps upload-ns-status; openaps report invoke enact/suggested.json 2>/dev/null; openaps pebble; openaps upload-pumphistory-entries; openaps upload-recent-treatments ) 2>/dev/null >/dev/null && echo ed"' || die "Can't add upload"
 
 read -p "Schedule openaps retry-loop in cron? " -n 1 -r
 echo
