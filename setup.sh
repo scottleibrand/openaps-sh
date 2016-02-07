@@ -70,7 +70,7 @@ git add cgm.ini
 #grep share /tmp/openaps-devices || openaps device add share openxshareble || die "Can't add Share"
 #openaps use share configure --serial $share_serial
 #git add share.ini
-openaps device remove ns-glucose
+#openaps device remove ns-glucose
 grep ns-glucose /tmp/openaps-devices || openaps device add ns-glucose process 'bash -c "curl -m 30 -s $NIGHTSCOUT_HOST/api/v1/entries/sgv.json?count=288 | json -e \"this.glucose = this.sgv\""' || die "Can't add ns-glucose"
 git add ns-glucose.ini
 grep oref0 /tmp/openaps-devices || openaps device add oref0 process oref0 || die "Can't add oref0"
@@ -83,7 +83,7 @@ grep get-profile /tmp/openaps-devices || openaps device add get-profile process 
 git add get-profile.ini
 grep detect-sensitivity /tmp/openaps-devices || openaps device add detect-sensitivity process --require "glucose pumphistory isf basal_profile profile" oref0 detect-sensitivity || die "Can't add detect-sensitivity"
 git add detect-sensitivity.ini
-openaps device remove determine-basal
+#openaps device remove determine-basal
 grep determine-basal /tmp/openaps-devices || openaps device add determine-basal process --require "iob temp_basal glucose profile autosens meal" oref0 determine-basal || die "Can't add determine-basal"
 git add determine-basal.ini
 grep pebble /tmp/openaps-devices || openaps device add pebble process --require "glucose iob basal_profile temp_basal suggested enacted" oref0 pebble || die "Can't add pebble"
@@ -112,7 +112,7 @@ grep monitor/pumphistory-zoned.json /tmp/openaps-reports || openaps report add m
 grep monitor/pumphistory-24h-zoned.json /tmp/openaps-reports || openaps report add monitor/pumphistory-24h-zoned.json JSON tz rezone monitor/pumphistory-24h.json || die "Can't add pumphistory-24h-zoned.json"
 grep monitor/iob.json /tmp/openaps-reports || openaps report add monitor/iob.json text iob shell monitor/pumphistory-zoned.json settings/profile.json monitor/clock-zoned.json || die "Can't add iob.json"
 grep monitor/meal.json /tmp/openaps-reports || openaps report add monitor/meal.json text meal shell monitor/pumphistory-zoned.json settings/profile.json monitor/clock-zoned.json || die "Can't add meal.json"
-openaps report remove settings/autosens.json
+#openaps report remove settings/autosens.json
 grep settings/autosens.json /tmp/openaps-reports || openaps report add settings/autosens.json text detect-sensitivity shell monitor/glucose.json monitor/pumphistory-zoned.json settings/insulin_sensitivities.json settings/basal_profile.json settings/profile.json || die "Can't add autosens.json"
 
 # add reports for infrequently-refreshed settings data
@@ -126,7 +126,7 @@ grep settings/profile.json /tmp/openaps-reports || openaps report add settings/p
 
 # add suggest and enact reports
 ls enact 2>/dev/null >/dev/null || mkdir enact || die "Can't mkdir enact"
-openaps report remove enact/suggested.json
+#openaps report remove enact/suggested.json
 grep enact/suggested.json /tmp/openaps-reports || openaps report add enact/suggested.json text determine-basal shell monitor/iob.json monitor/temp_basal.json monitor/glucose.json settings/profile.json settings/autosens.json monitor/meal.json || die "Can't add suggested.json"
 grep enact/enacted.json /tmp/openaps-reports || openaps report add enact/enacted.json JSON pump set_temp_basal enact/suggested.json || die "Can't add enacted.json"
 
