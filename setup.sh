@@ -90,7 +90,7 @@ git add detect-sensitivity.ini
 #openaps device remove determine-basal
 grep determine-basal /tmp/openaps-devices || openaps device add determine-basal process --require "iob temp_basal glucose profile autosens meal" oref0 determine-basal || die "Can't add determine-basal"
 git add determine-basal.ini
-grep pebble /tmp/openaps-devices || openaps device add pebble process --require "glucose iob basal_profile temp_basal suggested enacted" oref0 pebble || die "Can't add pebble"
+grep pebble /tmp/openaps-devices || openaps device add pebble process --require "glucose iob basal_profile temp_basal suggested enacted meal" oref0 pebble || die "Can't add pebble"
 git add pebble.ini
 grep tz /tmp/openaps-devices || openaps device add tz timezones || die "Can't add tz"
 git add tz.ini
@@ -136,15 +136,17 @@ grep enact/enacted.json /tmp/openaps-reports || openaps report add enact/enacted
 
 # upload results
 ls upload 2>/dev/null >/dev/null || mkdir upload || die "Can't mkdir upload"
-grep upload/pebble.json /tmp/openaps-reports || openaps report add upload/pebble.json text pebble shell monitor/glucose.json monitor/iob.json settings/basal_profile.json monitor/temp_basal.json enact/suggested.json enact/enacted.json || die "Can't add pebble.json"
+grep upload/pebble.json /tmp/openaps-reports || openaps report add upload/pebble.json text pebble shell monitor/glucose.json monitor/iob.json settings/basal_profile.json monitor/temp_basal.json enact/suggested.json enact/enacted.json monitor/meal.json || die "Can't add pebble.json"
 
 # don't re-create aliases if they already exist
 openaps alias show 2>/dev/null > /tmp/openaps-aliases
 
 # add aliases to get data
 openaps alias add invoke "report invoke" || die "Can't add invoke"
-openaps alias add mmtune "! bash -c \"cd ~/src/minimed_rf/ && ruby -I lib bin/mmtune $ttyport $serial | egrep -v 'rssi:|OK|Ver|Open'\""
-openaps alias add preflight '! bash -c "rm -f monitor/clock.json && echo -n \"mmtune: \" && openaps mmtune && echo -n \"PREFLIGHT \" && openaps report invoke monitor/clock.json 2>/dev/null >/dev/null && grep -q T monitor/clock.json && echo OK || ( echo FAIL; openaps get-bg; sleep 120; exit 1 )"' || die "Can't add preflight"
+#openaps alias add mmtune "! bash -c \"cd ~/src/minimed_rf/ && ruby -I lib bin/mmtune $ttyport $serial | egrep -v 'rssi:|OK|Ver|Open'\""
+openaps alias add mmtune "! bash -c \"cd ~/src/minimed_rf/ && ruby -I lib bin/mmtune $ttyport $serial >/dev/null\""
+openaps alias add preflight '! bash -c "rm -f monitor/clock.json && echo -n \"mmtune: \" && openaps mmtune && echo -n \"PREFLIGHT \" && openaps report invoke monitor/clock.json 2>/dev/null >/dev/null && grep -q T monitor/clock.json && echo OK || ( echo FAIL; openaps get-bg; sleep 180; exit 1 )"' || die "Can't add preflight"
+#openaps alias add preflight '! bash -c "rm -f monitor/clock.json && echo -n \"PREFLIGHT \" && openaps report invoke monitor/clock.json 2>/dev/null >/dev/null && grep -q T monitor/clock.json && echo OK || ( echo -n \"FAIL, mmtune: \" && openaps mmtune; openaps get-bg; sleep 180; exit 1 )"' || die "Can't add preflight"
 openaps alias add monitor-cgm "report invoke monitor/cgm-glucose.json" || die "Can't add monitor-cgm"
 #openaps alias add monitor-share "report invoke monitor/share-glucose.json" || die "Can't add monitor-share"
 openaps alias add get-ns-glucose "report invoke monitor/ns-glucose.json" || die "Can't add get-ns-glucose"
