@@ -20,7 +20,7 @@ die() {
 }
 
 if [[ $# -lt 2 ]]; then
-    openaps device show pump 2>/dev/null >/dev/null || die "Usage: setup.sh <directory> <pump serial #> [max_iob] [Share serial #]"
+    openaps device show pump 2>/dev/null >/dev/null || die "Usage: setup.sh <directory> <pump serial #> [max_iob] [Share serial #] [/dev/ttySOMETHING]"
 fi
 directory=`mkdir -p $1; cd $1; pwd`
 serial=$2
@@ -34,6 +34,9 @@ echo -n Setting up oref0 in $directory for pump $serial with max_iob $max_iob
 
 if [[ $# -gt 3 ]]; then
     share_serial=$4
+fi
+if [[ $# -gt 4 ]]; then
+    ttyport=$5
 fi
 echo
 
@@ -64,7 +67,7 @@ openaps device show 2>/dev/null > /tmp/openaps-devices
 grep -q pump.ini .gitignore 2>/dev/null || echo pump.ini >> .gitignore
 git add .gitignore
 #grep pump /tmp/openaps-devices || openaps device add pump medtronic $serial || die "Can't add pump"
-grep pump /tmp/openaps-devices || openaps device add pump mmeowlink subg_rfspy /dev/serial/by-id/usb-Nightscout_subg_rfspy_000002-if00 $serial || die "Can't add pump"
+grep pump /tmp/openaps-devices || openaps device add pump mmeowlink subg_rfspy $ttyport $serial || die "Can't add pump"
 grep cgm /tmp/openaps-devices || openaps device add cgm dexcom || die "Can't add CGM"
 git add cgm.ini
 #grep share /tmp/openaps-devices || openaps device add share openxshareble || die "Can't add Share"
@@ -139,7 +142,7 @@ openaps alias show 2>/dev/null > /tmp/openaps-aliases
 
 # add aliases to get data
 openaps alias add invoke "report invoke" || die "Can't add invoke"
-openaps alias add mmtune "! bash -c \"cd ~/src/minimed_rf/ && ruby -I lib bin/mmtune /dev/serial/by-id/usb-Nightscout_subg_rfspy_000002-if00 $serial | egrep -v 'rssi:|OK|Ver|Open'\""
+openaps alias add mmtune "! bash -c \"cd ~/src/minimed_rf/ && ruby -I lib bin/mmtune $ttyport $serial | egrep -v 'rssi:|OK|Ver|Open'\""
 openaps alias add preflight '! bash -c "rm -f monitor/clock.json && echo -n \"mmtune: \" && openaps mmtune && echo -n \"PREFLIGHT \" && openaps report invoke monitor/clock.json 2>/dev/null >/dev/null && grep -q T monitor/clock.json && echo OK || ( echo FAIL; openaps get-bg; sleep 120; exit 1 )"' || die "Can't add preflight"
 openaps alias add monitor-cgm "report invoke monitor/cgm-glucose.json" || die "Can't add monitor-cgm"
 #openaps alias add monitor-share "report invoke monitor/share-glucose.json" || die "Can't add monitor-share"
