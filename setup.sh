@@ -20,7 +20,8 @@ die() {
 }
 
 if [[ $# -lt 2 ]]; then
-    openaps device show pump 2>/dev/null >/dev/null || die "Usage: setup.sh <directory> <pump serial #> [max_iob] [Share serial #] [/dev/ttySOMETHING]"
+    #openaps device show pump 2>/dev/null >/dev/null || die "Usage: setup.sh <directory> <pump serial #> [max_iob] [Share serial #]
+    openaps device show pump 2>/dev/null >/dev/null || die "Usage: setup.sh <directory> <pump serial #> [max_iob] [/dev/ttySOMETHING]"
 fi
 directory=`mkdir -p $1; cd $1; pwd`
 serial=$2
@@ -31,11 +32,11 @@ else
     max_iob=$3
 fi
 
+#if [[ $# -gt 3 ]]; then
+    #share_serial=$4
+#fi
 if [[ $# -gt 3 ]]; then
-    share_serial=$4
-fi
-if [[ $# -gt 4 ]]; then
-    ttyport=$5
+    ttyport=$4
 fi
 echo -n Setting up oref0 in $directory for pump $serial with max_iob $max_iob and TTY $ttyport
 echo
