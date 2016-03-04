@@ -75,7 +75,7 @@ git add cgm.ini
 #openaps use share configure --serial $share_serial
 #git add share.ini
 #openaps device remove ns-glucose
-grep ns-glucose /tmp/openaps-devices || openaps device add ns-glucose process 'bash -c "curl -m 30 -s $NIGHTSCOUT_HOST/api/v1/entries/sgv.json?count=144 | json -e \"this.glucose = this.sgv\""' || die "Can't add ns-glucose"
+grep ns-glucose /tmp/openaps-devices || openaps device add ns-glucose process 'bash -c "curl -m 30 -s $NIGHTSCOUT_HOST/api/v1/entries/sgv.json?count=288 | json -e \"this.glucose = this.sgv\""' || die "Can't add ns-glucose"
 git add ns-glucose.ini
 grep oref0 /tmp/openaps-devices || openaps device add oref0 process oref0 || die "Can't add oref0"
 git add oref0.ini
@@ -100,7 +100,7 @@ openaps report show 2>/dev/null > /tmp/openaps-reports
 
 # add reports for frequently-refreshed monitoring data
 ls monitor 2>/dev/null >/dev/null || mkdir monitor || die "Can't mkdir monitor"
-grep monitor/cgm-glucose.json /tmp/openaps-reports || openaps report add monitor/cgm-glucose.json JSON cgm iter_glucose_hours 13 || die "Can't add cgm-glucose.json"
+grep monitor/cgm-glucose.json /tmp/openaps-reports || openaps report add monitor/cgm-glucose.json JSON cgm iter_glucose_hours 25 || die "Can't add cgm-glucose.json"
 #grep monitor/share-glucose.json /tmp/openaps-reports || openaps report add monitor/share-glucose.json JSON share iter_glucose 5 || die "Can't add share-glucose.json"
 grep monitor/ns-glucose.json /tmp/openaps-reports || openaps report add monitor/ns-glucose.json text ns-glucose shell || die "Can't add ns-glucose.json"
 grep settings/model.json /tmp/openaps-reports || openaps report add settings/model.json JSON pump model || die "Can't add model"
@@ -117,7 +117,7 @@ grep settings/pumphistory-24h-zoned.json /tmp/openaps-reports || openaps report 
 grep monitor/iob.json /tmp/openaps-reports || openaps report add monitor/iob.json text iob shell monitor/pumphistory-zoned.json settings/profile.json monitor/clock-zoned.json || die "Can't add iob.json"
 grep monitor/meal.json /tmp/openaps-reports || openaps report add monitor/meal.json text meal shell monitor/pumphistory-zoned.json settings/profile.json monitor/clock-zoned.json || die "Can't add meal.json"
 #openaps report remove settings/autosens.json
-grep settings/autosens.json /tmp/openaps-reports || openaps report add settings/autosens.json text detect-sensitivity shell monitor/glucose.json monitor/pumphistory-zoned.json settings/insulin_sensitivities.json settings/basal_profile.json settings/profile.json || die "Can't add autosens.json"
+grep settings/autosens.json /tmp/openaps-reports || openaps report add settings/autosens.json text detect-sensitivity shell monitor/glucose.json settings/pumphistory-24h-zoned.json settings/insulin_sensitivities.json settings/basal_profile.json settings/profile.json || die "Can't add autosens.json"
 
 # add reports for infrequently-refreshed settings data
 ls settings 2>/dev/null >/dev/null || mkdir settings || die "Can't mkdir settings"
@@ -160,7 +160,7 @@ openaps alias add gather '! bash -c "rm monitor/*; ( openaps get-bg | egrep \"re
 openaps alias add wait-for-bg '! bash -c "cp monitor/glucose.json monitor/last-glucose.json; while(diff -q monitor/last-glucose.json monitor/glucose.json); do echo -n .; sleep 10; openaps get-bg >/dev/null; done"'
 
 # add aliases to enact and loop
-openaps alias add enact '! bash -c "rm enact/suggested.json; openaps invoke enact/suggested.json && if (cat enact/suggested.json && grep -q duration enact/suggested.json); then ( rm enact/enacted.json; openaps invoke enact/enacted.json || openaps invoke enact/enacted.json; grep -q duration enact/enacted.json || openaps invoke enact/enacted.json ) 2>&1 | egrep -v \"^  |subg_rfspy|handler\" && cat enact/enacted.json | json -e \"if(this.duration === this.requested.duration){ this.recieved = true }\" | tee enact/enacted.json; else echo No action required; fi"' || die "Can't add enact"
+openaps alias add enact '! bash -c "rm enact/suggested.json; openaps invoke enact/suggested.json && if (cat enact/suggested.json && grep -q duration enact/suggested.json); then ( rm enact/enacted.json; openaps invoke enact/enacted.json ; grep -q duration enact/enacted.json || openaps invoke enact/enacted.json ) 2>&1 | egrep -v \"^  |subg_rfspy|handler\" && cat enact/enacted.json | json -e \"if(this.duration === this.requested.duration){ this.recieved = true }\" | tee enact/enacted.json; else echo No action required; fi"' || die "Can't add enact"
 openaps alias add wait-loop '! bash -c "openaps preflight && openaps gather && openaps enact && openaps report invoke monitor/temp_basal.json 2>/dev/null >/dev/null && openaps upload && (openaps get-settings || openaps get-settings) 2>/dev/null >/dev/null && openaps wait-for-bg && openaps enact && openaps upload-ns-status >/dev/null"' || die "Can't add wait-loop"
 openaps alias add loop '! bash -c "openaps preflight && openaps gather && openaps get-settings 2>/dev/null >/dev/null && openaps enact && openaps upload"' || die "Can't add loop"
 openaps alias add retry-loop '! bash -c "openaps wait-loop || openaps loop"' || die "Can't add retry-loop"
