@@ -102,7 +102,7 @@ openaps report show 2>/dev/null > /tmp/openaps-reports
 ls monitor 2>/dev/null >/dev/null || mkdir monitor || die "Can't mkdir monitor"
 grep monitor/cgm-glucose.json /tmp/openaps-reports || openaps report add monitor/cgm-glucose.json JSON cgm iter_glucose_hours 25 || die "Can't add cgm-glucose.json"
 mkdir raw-cgm
-grep raw-cgm/raw-entries.json /tmp/openaps-reports || openaps report add raw-cgm/raw-entries.json JSON cgm oref0_glucose
+grep raw-cgm/raw-entries.json /tmp/openaps-reports || openaps report add raw-cgm/raw-entries.json JSON cgm oref0_glucose --hours 24
 mkdir cgm
 grep cgm/cgm-glucose.json /tmp/openaps-reports || openaps report add cgm/cgm-glucose.json JSON tz rezone --date display_time --date dateString raw-cgm/raw-entries.json
 #grep monitor/cgm-glucose.json /tmp/openaps-reports || openaps report add monitor/cgm-glucose.json JSON share iter_glucose 288 || die "Can't add cgm-glucose.json"
