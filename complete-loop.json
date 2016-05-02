@@ -1,0 +1,795 @@
+[
+  {
+    "type": "report",
+    "name": "monitor/cgm-glucose.json",
+    "monitor/cgm-glucose.json": {
+      "count": "288",
+      "hours": "25.0",
+      "use": "iter_glucose",
+      "device": "share",
+      "reporter": "JSON"
+    }
+  },
+  {
+    "type": "report",
+    "name": "monitor/ns-glucose.json",
+    "monitor/ns-glucose.json": {
+      "device": "ns-glucose",
+      "remainder": "",
+      "use": "shell",
+      "json_default": "True",
+      "reporter": "text"
+    }
+  },
+  {
+    "type": "report",
+    "settings/model.json": {
+      "device": "pump",
+      "use": "model",
+      "reporter": "JSON"
+    },
+    "name": "settings/model.json"
+  },
+  {
+    "monitor/clock.json": {
+      "device": "pump",
+      "use": "read_clock",
+      "reporter": "JSON"
+    },
+    "type": "report",
+    "name": "monitor/clock.json"
+  },
+  {
+    "monitor/clock-zoned.json": {
+      "use": "clock",
+      "reporter": "JSON",
+      "astimezone": "False",
+      "date": "None",
+      "adjust": "missing",
+      "input": "monitor/clock.json",
+      "device": "tz",
+      "timezone": "PDT"
+    },
+    "type": "report",
+    "name": "monitor/clock-zoned.json"
+  },
+  {
+    "type": "report",
+    "name": "monitor/temp_basal.json",
+    "monitor/temp_basal.json": {
+      "device": "pump",
+      "use": "read_temp_basal",
+      "reporter": "JSON"
+    }
+  },
+  {
+    "monitor/reservoir.json": {
+      "device": "pump",
+      "use": "reservoir",
+      "reporter": "JSON"
+    },
+    "type": "report",
+    "name": "monitor/reservoir.json"
+  },
+  {
+    "monitor/battery.json": {
+      "device": "pump",
+      "use": "read_battery_status",
+      "reporter": "JSON"
+    },
+    "type": "report",
+    "name": "monitor/battery.json"
+  },
+  {
+    "type": "report",
+    "name": "monitor/status.json",
+    "monitor/status.json": {
+      "device": "pump",
+      "use": "status",
+      "reporter": "JSON"
+    }
+  },
+  {
+    "type": "report",
+    "name": "monitor/pumphistory.json",
+    "monitor/pumphistory.json": {
+      "hours": "5.0",
+      "device": "pump",
+      "use": "iter_pump_hours",
+      "reporter": "JSON"
+    }
+  },
+  {
+    "settings/pumphistory-24h.json": {
+      "hours": "27.0",
+      "device": "pump",
+      "use": "iter_pump_hours",
+      "reporter": "JSON"
+    },
+    "type": "report",
+    "name": "settings/pumphistory-24h.json"
+  },
+  {
+    "monitor/pumphistory-zoned.json": {
+      "use": "rezone",
+      "reporter": "JSON",
+      "astimezone": "False",
+      "date": "timestamp dateString start_at end_at created_at",
+      "adjust": "missing",
+      "input": "monitor/pumphistory.json",
+      "device": "tz",
+      "timezone": "PDT"
+    },
+    "type": "report",
+    "name": "monitor/pumphistory-zoned.json"
+  },
+  {
+    "type": "report",
+    "name": "settings/pumphistory-24h-zoned.json",
+    "settings/pumphistory-24h-zoned.json": {
+      "use": "rezone",
+      "reporter": "JSON",
+      "astimezone": "False",
+      "date": "timestamp dateString start_at end_at created_at",
+      "adjust": "missing",
+      "input": "settings/pumphistory-24h.json",
+      "device": "tz",
+      "timezone": "PDT"
+    }
+  },
+  {
+    "type": "report",
+    "name": "monitor/iob.json",
+    "monitor/iob.json": {
+      "profile": "settings/profile.json",
+      "use": "shell",
+      "clock": "monitor/clock-zoned.json",
+      "reporter": "text",
+      "json_default": "True",
+      "pumphistory": "monitor/pumphistory-zoned.json",
+      "device": "iob",
+      "remainder": ""
+    }
+  },
+  {
+    "type": "report",
+    "name": "monitor/meal.json",
+    "monitor/meal.json": {
+      "profile": "settings/profile.json",
+      "carbs": "monitor/carbhistory.json",
+      "clock": "monitor/clock-zoned.json",
+      "reporter": "text",
+      "json_default": "True",
+      "use": "shell",
+      "pumphistory": "monitor/pumphistory-zoned.json",
+      "basal": "settings/basal_profile.json",
+      "device": "meal",
+      "remainder": "",
+      "glucose": "monitor/glucose.json"
+    }
+  },
+  {
+    "type": "report",
+    "settings/autosens.json": {
+      "profile": "settings/profile.json",
+      "use": "shell",
+      "reporter": "text",
+      "basal_profile": "settings/basal_profile.json",
+      "json_default": "True",
+      "pumphistory": "settings/pumphistory-24h-zoned.json",
+      "device": "detect-sensitivity",
+      "remainder": "",
+      "isf": "settings/insulin_sensitivities.json",
+      "glucose": "monitor/glucose.json"
+    },
+    "name": "settings/autosens.json"
+  },
+  {
+    "type": "report",
+    "settings/bg_targets.json": {
+      "device": "pump",
+      "use": "read_bg_targets",
+      "reporter": "JSON"
+    },
+    "name": "settings/bg_targets.json"
+  },
+  {
+    "settings/insulin_sensitivities.json": {
+      "device": "pump",
+      "use": "read_insulin_sensitivities",
+      "reporter": "JSON"
+    },
+    "type": "report",
+    "name": "settings/insulin_sensitivities.json"
+  },
+  {
+    "settings/carb_ratios.json": {
+      "device": "pump",
+      "use": "read_carb_ratios",
+      "reporter": "JSON"
+    },
+    "type": "report",
+    "name": "settings/carb_ratios.json"
+  },
+  {
+    "settings/basal_profile.json": {
+      "device": "pump",
+      "use": "read_selected_basal_profile",
+      "reporter": "JSON"
+    },
+    "type": "report",
+    "name": "settings/basal_profile.json"
+  },
+  {
+    "settings/settings.json": {
+      "device": "pump",
+      "use": "read_settings",
+      "reporter": "JSON"
+    },
+    "type": "report",
+    "name": "settings/settings.json"
+  },
+  {
+    "settings/profile.json": {
+      "use": "shell",
+      "bg_targets": "settings/bg_targets.json",
+      "settings": "settings/settings.json",
+      "basal_profile": "settings/basal_profile.json",
+      "reporter": "text",
+      "json_default": "True",
+      "carb_ratios": "settings/carb_ratios.json",
+      "max_iob": "max_iob.json",
+      "device": "get-profile",
+      "remainder": "settings/temptargets.json",
+      "isf": "settings/insulin_sensitivities.json"
+    },
+    "type": "report",
+    "name": "settings/profile.json"
+  },
+  {
+    "type": "report",
+    "name": "enact/suggested.json",
+    "enact/suggested.json": {
+      "profile": "settings/profile.json",
+      "use": "shell",
+      "temp_basal": "monitor/temp_basal.json",
+      "reporter": "text",
+      "json_default": "True",
+      "meal": "monitor/meal.json",
+      "autosens": "settings/autosens.json",
+      "device": "determine-basal",
+      "remainder": "",
+      "iob": "monitor/iob.json",
+      "glucose": "monitor/glucose.json"
+    }
+  },
+  {
+    "type": "report",
+    "enact/enacted.json": {
+      "device": "pump",
+      "input": "enact/suggested.json",
+      "use": "set_temp_basal",
+      "reporter": "JSON"
+    },
+    "name": "enact/enacted.json"
+  },
+  {
+    "type": "report",
+    "upload/pebble.json": {
+      "suggested": "enact/suggested.json",
+      "use": "shell",
+      "temp_basal": "monitor/temp_basal.json",
+      "reporter": "text",
+      "basal_profile": "settings/basal_profile.json",
+      "json_default": "True",
+      "meal": "monitor/meal.json",
+      "device": "pebble",
+      "enacted": "enact/enacted.json",
+      "remainder": "",
+      "iob": "monitor/iob.json",
+      "glucose": "monitor/glucose.json"
+    },
+    "name": "upload/pebble.json"
+  },
+  {
+    "type": "report",
+    "monitor/mmtune.json": {
+      "device": "pump",
+      "use": "mmtune",
+      "reporter": "JSON"
+    },
+    "name": "monitor/mmtune.json"
+  },
+  {
+    "monitor/share-glucose.json": {
+      "count": "288",
+      "device": "share",
+      "use": "iter_glucose",
+      "reporter": "JSON"
+    },
+    "type": "report",
+    "name": "monitor/share-glucose.json"
+  },
+  {
+    "type": "report",
+    "monitor/oref0-glucose.json": {
+      "hours": "24.0",
+      "threshold": "100",
+      "use": "oref0_glucose",
+      "device": "cgm",
+      "reporter": "JSON"
+    },
+    "name": "monitor/oref0-glucose.json"
+  },
+  {
+    "type": "report",
+    "name": "cgm/oref0-glucose.json",
+    "cgm/oref0-glucose.json": {
+      "hours": "24.0",
+      "threshold": "100",
+      "use": "oref0_glucose",
+      "device": "cgm",
+      "reporter": "JSON"
+    }
+  },
+  {
+    "type": "report",
+    "name": "raw-cgm/raw-entries.json",
+    "raw-cgm/raw-entries.json": {
+      "hours": "1.0",
+      "threshold": "100",
+      "use": "oref0_glucose",
+      "device": "cgm",
+      "reporter": "JSON"
+    }
+  },
+  {
+    "type": "report",
+    "name": "monitor/glucose.json",
+    "monitor/glucose.json": {
+      "use": "rezone",
+      "reporter": "JSON",
+      "astimezone": "False",
+      "date": "timestamp dateString start_at end_at created_at display_time dateString",
+      "adjust": "missing",
+      "input": "raw-cgm/raw-entries.json",
+      "device": "tz",
+      "timezone": "PDT"
+    }
+  },
+  {
+    "type": "report",
+    "nightscout/uploaded-entries.json": {
+      "oper": "upload",
+      "use": "shell",
+      "remote": "entries.json",
+      "reporter": "JSON",
+      "json_default": "True",
+      "device": "ns",
+      "input": "monitor/glucose.json",
+      "remainder": ""
+    },
+    "name": "nightscout/uploaded-entries.json"
+  },
+  {
+    "cgm/glucose.json": {
+      "use": "rezone",
+      "reporter": "JSON",
+      "astimezone": "False",
+      "date": "timestamp dateString start_at end_at created_at display_time dateString",
+      "adjust": "missing",
+      "input": "raw-cgm/raw-entries.json",
+      "device": "tz",
+      "timezone": "PDT"
+    },
+    "type": "report",
+    "name": "cgm/glucose.json"
+  },
+  {
+    "cgm/ns-glucose.json": {
+      "device": "ns-glucose",
+      "remainder": "",
+      "use": "shell",
+      "json_default": "True",
+      "reporter": "text"
+    },
+    "type": "report",
+    "name": "cgm/ns-glucose.json"
+  },
+  {
+    "type": "report",
+    "name": "cgm/cgm-glucose.json",
+    "cgm/cgm-glucose.json": {
+      "use": "rezone",
+      "reporter": "JSON",
+      "astimezone": "False",
+      "date": "timestamp dateString start_at end_at created_at display_time dateString",
+      "adjust": "missing",
+      "input": "raw-cgm/raw-entries.json",
+      "device": "tz",
+      "timezone": "PDT"
+    }
+  },
+  {
+    "pump": {
+      "vendor": "mmeowlink.vendors.mmeowlink",
+      "extra": "pump.ini"
+    },
+    "type": "device",
+    "name": "pump",
+    "extra": {
+      "model": "522",
+      "expires": "2016-05-01T21:46:13.138999",
+      "serial": "12345",
+      "radio_type": "subg_rfspy",
+      "port": "/dev/ttyMFD1"
+    }
+  },
+  {
+    "ns-glucose": {
+      "vendor": "openaps.vendors.process",
+      "extra": "ns-glucose.ini"
+    },
+    "type": "device",
+    "name": "ns-glucose",
+    "extra": {
+      "fields": "",
+      "cmd": "bash -c \"curl -m 30 -s $NIGHTSCOUT_HOST/api/v1/entries/sgv.json?count=288 | json -e \\\"this.glucose = this.sgv\\\"\"",
+      "args": ""
+    }
+  },
+  {
+    "extra": {
+      "fields": "",
+      "cmd": "oref0",
+      "args": ""
+    },
+    "type": "device",
+    "name": "oref0",
+    "oref0": {
+      "vendor": "openaps.vendors.process",
+      "extra": "oref0.ini"
+    }
+  },
+  {
+    "extra": {
+      "fields": "pumphistory profile clock",
+      "cmd": "oref0",
+      "args": "calculate-iob"
+    },
+    "type": "device",
+    "name": "iob",
+    "iob": {
+      "vendor": "openaps.vendors.process",
+      "extra": "iob.ini"
+    }
+  },
+  {
+    "extra": {
+      "fields": "pumphistory profile clock carbs glucose basal",
+      "cmd": "oref0",
+      "args": "meal"
+    },
+    "type": "device",
+    "name": "meal",
+    "meal": {
+      "vendor": "openaps.vendors.process",
+      "extra": "meal.ini"
+    }
+  },
+  {
+    "extra": {
+      "fields": "settings bg_targets isf basal_profile max_iob carb_ratios",
+      "cmd": "oref0",
+      "args": "get-profile"
+    },
+    "type": "device",
+    "name": "get-profile",
+    "get-profile": {
+      "vendor": "openaps.vendors.process",
+      "extra": "get-profile.ini"
+    }
+  },
+  {
+    "extra": {
+      "fields": "glucose pumphistory isf basal_profile profile",
+      "cmd": "oref0",
+      "args": "detect-sensitivity"
+    },
+    "type": "device",
+    "name": "detect-sensitivity",
+    "detect-sensitivity": {
+      "vendor": "openaps.vendors.process",
+      "extra": "detect-sensitivity.ini"
+    }
+  },
+  {
+    "determine-basal": {
+      "vendor": "openaps.vendors.process",
+      "extra": "determine-basal.ini"
+    },
+    "type": "device",
+    "name": "determine-basal",
+    "extra": {
+      "fields": "iob temp_basal glucose profile autosens meal",
+      "cmd": "oref0",
+      "args": "determine-basal"
+    }
+  },
+  {
+    "pebble": {
+      "vendor": "openaps.vendors.process",
+      "extra": "pebble.ini"
+    },
+    "type": "device",
+    "name": "pebble",
+    "extra": {
+      "fields": "glucose iob basal_profile temp_basal suggested enacted meal",
+      "cmd": "oref0",
+      "args": "pebble"
+    }
+  },
+  {
+    "type": "device",
+    "tz": {
+      "vendor": "openapscontrib.timezones",
+      "extra": "tz.ini"
+    },
+    "name": "tz",
+    "extra": {}
+  },
+  {
+    "type": "device",
+    "share": {
+      "vendor": "openxshareble",
+      "extra": "share.ini"
+    },
+    "name": "share",
+    "extra": {
+      "serial": "SM51234567"
+    }
+  },
+  {
+    "type": "device",
+    "cgm": {
+      "vendor": "openxshareble",
+      "extra": "cgm.ini"
+    },
+    "name": "cgm",
+    "extra": {
+      "serial": "SM51234567"
+    }
+  },
+  {
+    "ns": {
+      "vendor": "openaps.vendors.process",
+      "extra": "ns.ini"
+    },
+    "type": "device",
+    "name": "ns",
+    "extra": {
+      "fields": "oper remote input",
+      "cmd": "nightscout",
+    }
+  },
+  {
+    "openapscontrib.timezones": {
+      "path": ".",
+      "module": "openapscontrib.timezones"
+    },
+    "type": "vendor",
+    "name": "openapscontrib.timezones"
+  },
+  {
+    "type": "vendor",
+    "name": "mmeowlink.vendors.mmeowlink",
+    "mmeowlink.vendors.mmeowlink": {
+      "path": ".",
+      "module": "mmeowlink.vendors.mmeowlink"
+    }
+  },
+  {
+    "type": "vendor",
+    "name": "openxshareble",
+    "openxshareble": {
+      "path": ".",
+      "module": "openxshareble"
+    }
+  },
+  {
+    "type": "alias",
+    "name": "invoke",
+    "invoke": {
+      "command": "report invoke"
+    }
+  },
+  {
+    "type": "alias",
+    "name": "mmtune",
+    "mmtune": {
+      "command": "! bash -c \"echo -n \\\"mmtune: \\\" && openaps report invoke monitor/mmtune.json 2>/dev/null >/dev/null; grep -v setFreq monitor/mmtune.json | grep -A2 `json -a setFreq -f monitor/mmtune.json` | while read line; do echo -n \\\"$line \\\"; done\""
+    }
+  },
+  {
+    "type": "alias",
+    "preflight": {
+      "command": "! bash -c \"openaps wait-for-silence && openaps mmtune && echo -n \\\"PREFLIGHT \\\" && openaps report invoke monitor/temp_basal.json 2>/dev/null >/dev/null && echo OK || ( echo FAIL; sleep 60; exit 1 )\""
+    },
+    "name": "preflight"
+  },
+  {
+    "type": "alias",
+    "name": "monitor-cgm",
+    "monitor-cgm": {
+      "command": "report invoke raw-cgm/raw-entries.json cgm/cgm-glucose.json"
+    }
+  },
+  {
+    "type": "alias",
+    "name": "get-ns-glucose",
+    "get-ns-glucose": {
+      "command": "report invoke cgm/ns-glucose.json"
+    }
+  },
+  {
+    "monitor-pump": {
+      "command": "report invoke monitor/clock.json monitor/temp_basal.json monitor/pumphistory.json monitor/pumphistory-zoned.json monitor/clock-zoned.json monitor/iob.json monitor/meal.json monitor/reservoir.json monitor/battery.json monitor/status.json"
+    },
+    "type": "alias",
+    "name": "monitor-pump"
+  },
+  {
+    "ns-meal-carbs": {
+      "command": "! bash -c \"curl -m 30 -s \\\"$NIGHTSCOUT_HOST/api/v1/treatments.json?find\\[created_at\\]\\[\\$gte\\]=`date -d \\\"6 hours ago\\\" -Iminutes`&find\\[carbs\\]\\[\\$exists\\]=true\\\" > monitor/carbhistory.json && oref0-meal monitor/pumphistory-zoned.json settings/profile.json monitor/clock-zoned.json monitor/carbhistory.json > monitor/meal.json; exit 0\""
+    },
+    "type": "alias",
+    "name": "ns-meal-carbs"
+  },
+  {
+    "type": "alias",
+    "name": "get-settings",
+    "get-settings": {
+      "command": "report invoke settings/model.json settings/bg_targets.json settings/insulin_sensitivities.json settings/basal_profile.json settings/settings.json settings/carb_ratios.json settings/profile.json settings/pumphistory-24h.json settings/pumphistory-24h-zoned.json settings/autosens.json"
+    }
+  },
+  {
+    "get-bg": {
+      "command": "! bash -c \"openaps ns-temptargets; openaps bg-fresh-check || ( openaps get-ns-glucose && cat cgm/ns-glucose.json | json -c \\\"minAgo=(new Date()-new Date(this.dateString))/60/1000; return minAgo < 10 && minAgo > -5 && this.glucose > 30\\\" | grep -q glucose && rsync -rtu cgm/ns-glucose.json cgm/glucose.json ); openaps bg-fresh-check || ( openaps monitor-cgm 2>/dev/null | tail -1 && grep -q glucose cgm/glucose.json && rsync -rtu cgm/cgm-glucose.json cgm/glucose.json ); rsync -rtu cgm/glucose.json monitor/glucose.json\""
+    },
+    "type": "alias",
+    "name": "get-bg"
+  },
+  {
+    "gather": {
+      "command": "! bash -c \"rm monitor/*; rsync -rtu cgm/glucose.json monitor/glucose.json; ( openaps ns-temptargets; echo -n R && openaps report invoke monitor/status.json 2>/dev/null >/dev/null && echo -n e && test $(cat monitor/status.json | json bolusing) == false && echo -n fr && openaps ns-meal-carbs && echo -n e && openaps ns-temptargets && echo -n sh && ( (openaps monitor-pump || openaps monitor-pump) >/dev/null && echo ed ) || (echo; sleep 30; exit 1)) 2>/dev/null\""
+    },
+    "type": "alias",
+    "name": "gather"
+  },
+  {
+    "type": "alias",
+    "wait-for-bg": {
+      "command": "! bash -c \"cp monitor/glucose.json monitor/last-glucose.json; while(diff -q monitor/last-glucose.json monitor/glucose.json); do echo -n .; sleep 10; done\""
+    },
+    "name": "wait-for-bg"
+  },
+  {
+    "type": "alias",
+    "name": "enact",
+    "enact": {
+      "command": "! bash -c \"rm enact/suggested.json; openaps invoke enact/suggested.json && if (cat enact/suggested.json && grep -q duration enact/suggested.json); then ( rm enact/enacted.json; openaps invoke enact/enacted.json ; grep -q duration enact/enacted.json || openaps invoke enact/enacted.json ) 2>&1 | egrep -v \\\"^  |subg_rfspy|handler\\\" && cat enact/enacted.json | json -0 | tee enact/enacted.json; else echo No action required; fi\""
+    }
+  },
+  {
+    "type": "alias",
+    "name": "wait-loop",
+    "wait-loop": {
+      "command": "! bash -c \"echo Starting wait-loop: && openaps preflight && openaps ns-temptargets && openaps enact && openaps gather && openaps enact && openaps report invoke monitor/temp_basal.json 2>/dev/null >/dev/null && openaps upload && (openaps get-settings || openaps get-settings) 2>/dev/null >/dev/null && openaps invoke settings/autosens.json && openaps wait-for-bg && openaps enact && openaps upload-ns-status >/dev/null\""
+    }
+  },
+  {
+    "type": "alias",
+    "name": "loop",
+    "loop": {
+      "command": "! bash -c \"echo Starting loop: && openaps preflight && openaps gather && openaps get-settings 2>/dev/null >/dev/null && openaps enact && openaps upload && openaps invoke settings/autosens.json\""
+    }
+  },
+  {
+    "retry-loop": {
+      "command": "! bash -c \"openaps wait-loop || openaps loop\""
+    },
+    "type": "alias",
+    "name": "retry-loop"
+  },
+  {
+    "pebble": {
+      "command": "! bash -c \"grep -q iob monitor/iob.json && grep -q absolute enact/suggested.json && openaps report invoke upload/pebble.json\""
+    },
+    "type": "alias",
+    "name": "pebble"
+  },
+  {
+    "prep-pumphistory-entries": {
+      "command": "! bash -c \"cat monitor/pumphistory-zoned.json | json -e \\\"this.dateString = this.timestamp\\\" | json -e \\\"this.medtronic = this._type\\\" | json -e \\\"this.type = \\\\\\\"medtronic\\\\\\\"\\\" | json -e \\\"this.date = new Date(Date.parse(this.timestamp)).getTime( )\\\" > upload/pumphistory-entries.json\""
+    },
+    "type": "alias",
+    "name": "prep-pumphistory-entries"
+  },
+  {
+    "type": "alias",
+    "name": "upload-pumphistory-entries",
+    "upload-pumphistory-entries": {
+      "command": "! bash -c \"openaps prep-pumphistory-entries && ns-upload-entries upload/pumphistory-entries.json\""
+    }
+  },
+  {
+    "type": "alias",
+    "name": "latest-ns-treatment-time",
+    "latest-ns-treatment-time": {
+      "command": "! bash -c \"nightscout latest-openaps-treatment $NIGHTSCOUT_HOST | json created_at\""
+    }
+  },
+  {
+    "type": "alias",
+    "name": "format-latest-nightscout-treatments",
+    "format-latest-nightscout-treatments": {
+      "command": "! bash -c \"nightscout cull-latest-openaps-treatments monitor/pumphistory-zoned.json settings/model.json $(openaps latest-ns-treatment-time) > upload/latest-treatments.json\""
+    }
+  },
+  {
+    "type": "alias",
+    "name": "upload-recent-treatments",
+    "upload-recent-treatments": {
+      "command": "! bash -c \"openaps format-latest-nightscout-treatments && test $(json -f upload/latest-treatments.json -a created_at eventType | wc -l ) -gt 0 && (ns-upload $NIGHTSCOUT_HOST $API_SECRET treatments.json upload/latest-treatments.json ) || echo \\\"No recent treatments to upload\\\"\""
+    }
+  },
+  {
+    "type": "alias",
+    "name": "format-ns-status",
+    "format-ns-status": {
+      "command": "! bash -c \"ns-status monitor/clock-zoned.json monitor/iob.json enact/suggested.json enact/enacted.json monitor/battery.json monitor/reservoir.json monitor/status.json > upload/ns-status.json\""
+    }
+  },
+  {
+    "upload-ns-status": {
+      "command": "! bash -c \"grep -q iob monitor/iob.json && grep -q absolute enact/suggested.json && openaps format-ns-status && grep -q iob upload/ns-status.json && ns-upload $NIGHTSCOUT_HOST $API_SECRET devicestatus.json upload/ns-status.json\""
+    },
+    "type": "alias",
+    "name": "upload-ns-status"
+  },
+  {
+    "type": "alias",
+    "name": "upload",
+    "upload": {
+      "command": "! bash -c \"echo -n Upload && ( openaps upload-ns-status; openaps report invoke enact/suggested.json 2>/dev/null; openaps pebble; openaps upload-pumphistory-entries; openaps upload-recent-treatments ) 2>/dev/null >/dev/null && echo ed\""
+    }
+  },
+  {
+    "type": "alias",
+    "ns-temptargets": {
+      "command": "! bash -c \"curl -m 30 -s \\\"$NIGHTSCOUT_HOST/api/v1/treatments.json?find\\[created_at\\]\\[\\$gte\\]=`date -d \\\"6 hours ago\\\" -Iminutes`&find\\[eventType\\]\\[\\$regex\\]=Target\\\" > settings/temptargets.json; openaps report invoke settings/profile.json 2>/dev/null >/dev/null; exit 0 \""
+    },
+    "name": "ns-temptargets"
+  },
+  {
+    "type": "alias",
+    "name": "wait-for-silence",
+    "wait-for-silence": {
+      "command": "! bash -c \"echo -n \\\"Listening: \\\"; for i in `seq 1 100`; do echo -n .; ~/src/mmeowlink/bin/mmeowlink-any-pump-comms.py --port /dev/ttyMFD1 --wait-for 20 2>/dev/null | egrep -v subg | egrep No && break; done\""
+    }
+  },
+  {
+    "type": "alias",
+    "name": "bg-fresh-check",
+    "bg-fresh-check": {
+      "command": "! bash -c \"cat cgm/glucose.json | json -c \\\"minAgo=(new Date()-new Date(this.dateString))/60/1000; return minAgo < 6 && minAgo > 0 && this.glucose > 30\\\" | grep -q glucose\""
+    }
+  },
+  {
+    "type": "alias",
+    "name": "get-share-bg",
+    "get-share-bg": {
+      "command": "! bash -c \"openaps invoke monitor/share-glucose.json; cat monitor/share-glucose.json | json -c \\\"minAgo=(new Date()-new Date(this.dateString))/60/1000; return minAgo < 7 && minAgo > 0 && this.glucose > 30\\\" | grep -q glucose && rsync -rtu monitor/share-glucose.json monitor/glucose.json\""
+    }
+  }
+]
