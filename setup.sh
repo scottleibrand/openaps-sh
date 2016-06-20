@@ -60,7 +60,7 @@ grep oref0 /tmp/openaps-devices || openaps device add oref0 process oref0 || die
 git add oref0.ini
 grep iob /tmp/openaps-devices || openaps device add iob process --require "pumphistory profile clock" oref0 calculate-iob || die "Can't add iob"
 git add iob.ini
-grep get-profile /tmp/openaps-devices || openaps device add get-profile process --require "settings bg_targets isf basal_profile max_iob" oref0 get-profile || die "Can't add get-profile"
+grep get-profile /tmp/openaps-devices || openaps device add get-profile process --require "settings bg_targets isf basal_profile max_iob temptargets" oref0 get-profile || die "Can't add get-profile"
 git add get-profile.ini
 grep determine-basal /tmp/openaps-devices || openaps device add determine-basal process --require "iob temp_basal glucose profile" oref0 determine-basal || die "Can't add determine-basal"
 git add determine-basal.ini
@@ -90,7 +90,7 @@ grep settings/bg_targets.json /tmp/openaps-reports || openaps report add setting
 grep settings/insulin_sensitivies.json /tmp/openaps-reports || openaps report add settings/insulin_sensitivies.json JSON pump read_insulin_sensitivies || die "Can't add insulin_sensitivies.json"
 grep settings/basal_profile.json /tmp/openaps-reports || openaps report add settings/basal_profile.json JSON pump read_selected_basal_profile || die "Can't add basal_profile.json"
 grep settings/settings.json /tmp/openaps-reports || openaps report add settings/settings.json JSON pump read_settings || die "Can't add settings.json"
-grep settings/profile.json /tmp/openaps-reports || openaps report add settings/profile.json text get-profile shell settings/settings.json settings/bg_targets.json settings/insulin_sensitivies.json settings/basal_profile.json max_iob.json || die "Can't add profile.json"
+grep settings/profile.json /tmp/openaps-reports || openaps report add settings/profile.json text get-profile shell settings/settings.json settings/bg_targets.json settings/insulin_sensitivies.json settings/basal_profile.json max_iob.json settings/carb_ratios.json settings/temptargets.json  || die "Can't add profile.json"
 
 # add suggest and enact reports
 ls enact 2>/dev/null >/dev/null || mkdir enact || die "Can't mkdir enact"
