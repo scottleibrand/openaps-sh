@@ -83,7 +83,7 @@ grep iob /tmp/openaps-devices || openaps device add iob process --require "pumph
 git add iob.ini
 grep meal /tmp/openaps-devices || openaps device add meal process --require "pumphistory profile clock carbs glucose basal" oref0 meal || die "Can't add meal"
 git add meal.ini
-grep get-profile /tmp/openaps-devices || openaps device add get-profile process --require "settings bg_targets isf basal_profile max_iob carb_ratios" oref0 get-profile || die "Can't add get-profile"
+grep get-profile /tmp/openaps-devices || openaps device add get-profile process --require "settings bg_targets isf basal_profile max_iob carb_ratios temptargets" oref0 get-profile || die "Can't add get-profile"
 git add get-profile.ini
 grep detect-sensitivity /tmp/openaps-devices || openaps device add detect-sensitivity process --require "glucose pumphistory isf basal_profile profile" oref0 detect-sensitivity || die "Can't add detect-sensitivity"
 git add detect-sensitivity.ini
