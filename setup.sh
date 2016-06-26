@@ -105,8 +105,6 @@ mkdir raw-cgm
 grep raw-cgm/raw-entries.json /tmp/openaps-reports || openaps report add raw-cgm/raw-entries.json JSON cgm oref0_glucose --hours 24
 mkdir cgm
 grep cgm/cgm-glucose.json /tmp/openaps-reports || openaps report add cgm/cgm-glucose.json JSON tz rezone --date display_time --date dateString raw-cgm/raw-entries.json
-#grep monitor/cgm-glucose.json /tmp/openaps-reports || openaps report add monitor/cgm-glucose.json JSON share iter_glucose 288 || die "Can't add cgm-glucose.json"
-#grep monitor/share-glucose.json /tmp/openaps-reports || openaps report add monitor/share-glucose.json JSON share iter_glucose 5 || die "Can't add share-glucose.json"
 grep cgm/ns-glucose.json /tmp/openaps-reports || openaps report add cgm/ns-glucose.json text ns-glucose shell || die "Can't add ns-glucose.json"
 grep monitor/mmtune.json /tmp/openaps-reports || openaps report add monitor/mmtune.json JSON pump mmtune || die "Can't add mmtune"
 grep settings/model.json /tmp/openaps-reports || openaps report add settings/model.json JSON pump model || die "Can't add model"
@@ -149,12 +147,8 @@ openaps alias show 2>/dev/null > /tmp/openaps-aliases
 
 # add aliases to get data
 openaps alias add invoke "report invoke" || die "Can't add invoke"
-#openaps alias add mmtune "! bash -c \"cd ~/src/minimed_rf/ && ruby -I lib bin/mmtune $ttyport $serial >/dev/null\""
 openaps alias add mmtune '! bash -c "echo -n \"mmtune: \" && openaps report invoke monitor/mmtune.json 2>/dev/null >/dev/null; grep -v setFreq monitor/mmtune.json | grep -A2 `json -a setFreq -f monitor/mmtune.json` | while read line; do echo -n \"$line \"; done"'
-#openaps alias add wait-for-silence '! bash -c "echo -n \"Listening: \"; ~/src/mmeowlink/bin/mmeowlink-any-pump-comms.py --port /dev/ttyMFD1 --wait-for 10 | egrep -v subg"'
-openaps alias add wait-for-silence '! bash -c "echo -n \"Listening: \"; for i in `seq 1 100`; do echo -n .; ~/src/mmeowlink/bin/mmeowlink-any-pump-comms.py --port '$ttyport' --wait-for 20 2>/dev/null | egrep -v subg | egrep No && break; done"'
-#openaps alias add preflight '! bash -c "openaps wait-for-silence && openaps mmtune && echo -n \"PREFLIGHT \" && openaps report invoke monitor/temp_basal.json 2>/dev/null >/dev/null && echo OK || ( echo FAIL; sleep 60; exit 1 )"' || die "Can't add preflight"
-#openaps alias add preflight '! bash -c "echo -n \"mmtune: \" && openaps mmtune && echo -n \"PREFLIGHT \" && openaps report invoke monitor/temp_basal.json 2>/dev/null >/dev/null && echo OK || ( echo FAIL; sleep 120; exit 1 )"' || die "Can't add preflight"
+openaps alias add wait-for-silence '! bash -c "echo -n \"Listening: \"; for i in `seq 1 100`; do echo -n .; ~/src/mmeowlink/bin/mmeowlink-any-pump-comms.py --port '$ttyport' --wait-for 15 2>/dev/null | egrep -v subg | egrep No && break; done"'
 openaps alias add monitor-cgm "report invoke raw-cgm/raw-entries.json cgm/cgm-glucose.json" || die "Can't add monitor-cgm"
 #openaps alias add monitor-share "report invoke monitor/share-glucose.json" || die "Can't add monitor-share"
 openaps alias add get-ns-glucose "report invoke cgm/ns-glucose.json" || die "Can't add get-ns-glucose"
@@ -165,7 +159,6 @@ openaps alias add get-settings "report invoke settings/model.json settings/bg_ta
 openaps alias add bg-fresh-check '! bash -c "cat cgm/glucose.json | json -c \"minAgo=(new Date()-new Date(this.dateString))/60/1000; return minAgo < 6 && minAgo > 0 && this.glucose > 30\" | grep -q glucose"'
 openaps alias add get-bg '! bash -c "openaps bg-fresh-check || ( openaps get-ns-glucose && cat cgm/ns-glucose.json | json -c \"minAgo=(new Date()-new Date(this.dateString))/60/1000; return minAgo < 10 && minAgo > -5 && this.glucose > 30\" | grep -q glucose && rsync -rtu cgm/ns-glucose.json cgm/glucose.json ); openaps bg-fresh-check || ( openaps monitor-cgm 2>/dev/null | tail -1 && grep -q glucose cgm/cgm-glucose.json && rsync -rtu cgm/cgm-glucose.json cgm/glucose.json ); rsync -rtu cgm/glucose.json monitor/glucose.json"' || die "Can't add get-bg"
 openaps alias add gather '! bash -c "echo -n Re && openaps report invoke monitor/status.json 2>/dev/null >/dev/null && echo -n fr && test $(cat monitor/status.json | json bolusing) == false && echo -n esh && openaps monitor-pump >/dev/null && echo ed || (echo; exit 1) 2>/dev/null"' || die "Can't add gather"
-#openaps alias add wait-for-bg '! bash -c "while(diff -q monitor/last-glucose.json monitor/glucose.json); do echo -n .; sleep 10; done; cp monitor/glucose.json monitor/last-glucose.json"'
 openaps alias add autosens '! bash -c "find settings/ -newer settings/pumphistory-24h-zoned.json | grep -q autosens.json && openaps invoke settings/autosens.json"'
 openaps alias add refresh-old-pumphistory '! bash -c "find monitor/ -mmin 30 | grep -q pumphistory-zoned || openaps gather"'
 openaps alias add refresh-temp-and-enact '! bash -c "find monitor/ -mmin 1 | grep -q temp_basal || (openaps report invoke monitor/temp_basal.json && openaps enact)"'
@@ -176,11 +169,8 @@ openaps alias add refresh-pumphistory-24h '! bash -c "find monitor/ -mmin 15 | g
 
 # add aliases to enact and loop
 openaps alias add enact '! bash -c "rm enact/suggested.json; openaps invoke enact/suggested.json && if (cat enact/suggested.json && grep -q duration enact/suggested.json); then ( rm enact/enacted.json; openaps invoke enact/enacted.json ; grep -q duration enact/enacted.json || openaps invoke enact/enacted.json ) 2>&1 | egrep -v \"^  |subg_rfspy|handler\" && cat enact/enacted.json | json -0 | tee enact/enacted.json; grep incorrectly enact/suggested.json && ~/src/oref0/bin/clockset.sh 2>/dev/null; fi"' || die "Can't add enact"
-#openaps alias add wait-loop '! bash -c "echo Starting wait-loop: && openaps preflight && openaps enact && openaps gather && openaps enact && openaps report invoke monitor/temp_basal.json 2>/dev/null >/dev/null && (openaps get-settings || openaps get-settings) 2>/dev/null >/dev/null && openaps wait-for-bg && openaps enact"' || die "Can't add wait-loop"
-#openaps alias add loop '! bash -c "echo Starting loop: && openaps preflight && openaps gather && openaps get-settings 2>/dev/null >/dev/null && openaps enact"' || die "Can't add loop"
 openaps alias add ns-loop '! bash -c "echo Starting ns-loop: && openaps ns-temptargets && openaps ns-meal-carbs && openaps upload && openaps autosens"' || die "Can't add ns-loop"
 openaps alias add pump-loop '! bash -c "until(echo Starting pump-loop: && openaps wait-for-silence && openaps refresh-old-pumphistory && openaps refresh-old-profile && openaps refresh-temp-and-enact && openaps refresh-pumphistory-and-enact && openaps refresh-profile && openaps refresh-pumphistory-24h); do openaps wait-for-silence && openaps mmtune); done"' || die "Can't add pump-loop"
-#openaps alias add retry-loop '! bash -c "openaps wait-loop || openaps loop"' || die "Can't add retry-loop"
 
 # add aliases to upload results
 openaps alias add pebble '! bash -c "grep -q iob monitor/iob.json && grep -q absolute enact/suggested.json && openaps report invoke upload/pebble.json"' || die "Can't add pebble"
