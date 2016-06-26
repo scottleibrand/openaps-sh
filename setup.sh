@@ -169,8 +169,8 @@ openaps alias add refresh-pumphistory-24h '! bash -c "find monitor/ -mmin 15 | g
 
 # add aliases to enact and loop
 openaps alias add enact '! bash -c "rm enact/suggested.json; openaps invoke enact/suggested.json && if (cat enact/suggested.json && grep -q duration enact/suggested.json); then ( rm enact/enacted.json; openaps invoke enact/enacted.json ; grep -q duration enact/enacted.json || openaps invoke enact/enacted.json ) 2>&1 | egrep -v \"^  |subg_rfspy|handler\" && cat enact/enacted.json | json -0 | tee enact/enacted.json; grep incorrectly enact/suggested.json && ~/src/oref0/bin/clockset.sh 2>/dev/null; fi"' || die "Can't add enact"
-openaps alias add ns-loop '! bash -c "echo Starting ns-loop: && openaps ns-temptargets && openaps ns-meal-carbs && openaps upload && openaps autosens"' || die "Can't add ns-loop"
-openaps alias add pump-loop '! bash -c "until(echo Starting pump-loop: && openaps wait-for-silence && openaps refresh-old-pumphistory && openaps refresh-old-profile && openaps refresh-temp-and-enact && openaps refresh-pumphistory-and-enact && openaps refresh-profile && openaps refresh-pumphistory-24h); do openaps wait-for-silence && openaps mmtune); done"' || die "Can't add pump-loop"
+openaps alias add ns-loop '! bash -c "echo Starting ns-loop: && openaps ns-temptargets && echo -n Refreshed temptargets && openaps ns-meal-carbs && echo \" and meal-carbs\" && openaps upload && openaps autosens"' || die "Can't add ns-loop"
+openaps alias add pump-loop '! bash -c "until(echo Starting pump-loop: && openaps wait-for-silence && openaps refresh-old-pumphistory && openaps refresh-old-profile && openaps refresh-temp-and-enact && openaps refresh-pumphistory-and-enact && openaps refresh-profile && openaps refresh-pumphistory-24h); do openaps wait-for-silence && openaps mmtune; done"' || die "Can't add pump-loop"
 
 # add aliases to upload results
 openaps alias add pebble '! bash -c "grep -q iob monitor/iob.json && grep -q absolute enact/suggested.json && openaps report invoke upload/pebble.json"' || die "Can't add pebble"
