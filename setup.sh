@@ -119,7 +119,7 @@ grep settings/pumphistory-24h.json /tmp/openaps-reports || openaps report add se
 grep monitor/pumphistory-zoned.json /tmp/openaps-reports || openaps report add monitor/pumphistory-zoned.json JSON tz rezone monitor/pumphistory.json || die "Can't add pumphistory-zoned.json"
 grep settings/pumphistory-24h-zoned.json /tmp/openaps-reports || openaps report add settings/pumphistory-24h-zoned.json JSON tz rezone settings/pumphistory-24h.json || die "Can't add pumphistory-24h-zoned.json"
 grep monitor/iob.json /tmp/openaps-reports || openaps report add monitor/iob.json text iob shell monitor/pumphistory-zoned.json settings/profile.json monitor/clock-zoned.json || die "Can't add iob.json"
-grep monitor/meal.json /tmp/openaps-reports || openaps report add monitor/meal.json text meal shell monitor/pumphistory-zoned.json settings/profile.json monitor/clock-zoned.json monitor/carbhistory.json monitor/glucose.json settings/basal_profile.json || die "Can't add meal.json"
+grep monitor/meal.json /tmp/openaps-reports || openaps report add monitor/meal.json text meal shell monitor/pumphistory-zoned.json settings/profile.json monitor/clock-zoned.json settings/carbhistory.json monitor/glucose.json settings/basal_profile.json || die "Can't add meal.json"
 #openaps report remove settings/autosens.json
 grep settings/autosens.json /tmp/openaps-reports || openaps report add settings/autosens.json text detect-sensitivity shell monitor/glucose.json settings/pumphistory-24h-zoned.json settings/insulin_sensitivities.json settings/basal_profile.json settings/profile.json || die "Can't add autosens.json"
 
