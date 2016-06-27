@@ -185,7 +185,7 @@ openaps alias add format-ns-status '! bash -c "ns-status monitor/clock-zoned.jso
 openaps alias add upload-ns-status '! bash -c "grep -q iob monitor/iob.json && grep -q absolute enact/suggested.json && openaps format-ns-status && grep -q iob upload/ns-status.json && ns-upload $NIGHTSCOUT_HOST $API_SECRET devicestatus.json upload/ns-status.json"' || die "Can't add upload-ns-status"
 openaps alias add upload '! bash -c "echo -n Upload && ( openaps upload-ns-status; openaps report invoke enact/suggested.json 2>/dev/null; openaps pebble; openaps upload-pumphistory-entries; openaps upload-recent-treatments ) 2>/dev/null >/dev/null && echo ed"' || die "Can't add upload"
 
-read -p "Schedule openaps retry-loop in cron? " -n 1 -r
+read -p "Schedule openaps in cron? " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
 # add crontab entries
