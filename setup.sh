@@ -148,7 +148,7 @@ openaps alias show 2>/dev/null > /tmp/openaps-aliases
 # add aliases to get data
 openaps alias add invoke "report invoke" || die "Can't add invoke"
 openaps alias add mmtune '! bash -c "echo -n \"mmtune: \" && openaps report invoke monitor/mmtune.json 2>/dev/null >/dev/null; grep -v setFreq monitor/mmtune.json | grep -A2 `json -a setFreq -f monitor/mmtune.json` | while read line; do echo -n \"$line \"; done"'
-openaps alias add wait-for-silence '! bash -c "echo -n \"Listening: \"; for i in `seq 1 100`; do echo -n .; ~/src/mmeowlink/bin/mmeowlink-any-pump-comms.py --port '$ttyport' --wait-for 15 2>/dev/null | egrep -v subg | egrep No && break; done"'
+openaps alias add wait-for-silence '! bash -c "echo -n \"Listening: \"; for i in `seq 1 100`; do echo -n .; ~/src/mmeowlink/bin/mmeowlink-any-pump-comms.py --port '$ttyport' --wait-for 20 2>/dev/null | egrep -v subg | egrep No && break; done"'
 openaps alias add monitor-cgm "report invoke raw-cgm/raw-entries.json cgm/cgm-glucose.json" || die "Can't add monitor-cgm"
 #openaps alias add monitor-share "report invoke monitor/share-glucose.json" || die "Can't add monitor-share"
 openaps alias add get-ns-glucose "report invoke cgm/ns-glucose.json" || die "Can't add get-ns-glucose"
@@ -159,14 +159,15 @@ openaps alias add get-settings "report invoke settings/model.json settings/bg_ta
 openaps alias add bg-fresh-check '! bash -c "cat cgm/glucose.json | json -c \"minAgo=(new Date()-new Date(this.dateString))/60/1000; return minAgo < 6 && minAgo > 0 && this.glucose > 30\" | grep -q glucose"'
 openaps alias add get-bg '! bash -c "openaps bg-fresh-check || ( openaps get-ns-glucose && cat cgm/ns-glucose.json | json -c \"minAgo=(new Date()-new Date(this.dateString))/60/1000; return minAgo < 10 && minAgo > -5 && this.glucose > 30\" | grep -q glucose && rsync -rtu cgm/ns-glucose.json cgm/glucose.json ); openaps bg-fresh-check || ( openaps monitor-cgm 2>/dev/null | tail -1 && grep -q glucose cgm/cgm-glucose.json && rsync -rtu cgm/cgm-glucose.json cgm/glucose.json ); rsync -rtu cgm/glucose.json monitor/glucose.json"' || die "Can't add get-bg"
 openaps alias add gather '! bash -c "echo -n Re && openaps report invoke monitor/status.json 2>/dev/null >/dev/null && echo -n fr && test $(cat monitor/status.json | json bolusing) == false && echo -n esh && openaps monitor-pump 2>/dev/null >/dev/null && echo ed pumphistory || (echo; exit 1) 2>/dev/null"' || die "Can't add gather"
-openaps alias add autosens '! bash -c "find settings/ -newer settings/pumphistory-24h-zoned.json | grep -q autosens.json || openaps invoke settings/autosens.json"'
-openaps alias add refresh-old-pumphistory '! bash -c "find monitor/ -mmin -30 | grep -q pumphistory-zoned || openaps gather "'
-openaps alias add refresh-old-pumphistory-24h '! bash -c "find settings/ -mmin -30 | grep -q pumphistory-24h-zoned || (openaps report invoke settings/pumphistory-24h.json settings/pumphistory-24h-zoned.json 2>/dev/null >/dev/null && echo Refreshed old pumphistory-24h)"'
-openaps alias add refresh-temp-and-enact '! bash -c "find monitor/ -mmin -1 | grep -q temp_basal || (openaps report invoke monitor/temp_basal.json 2>/dev/null >/dev/null && echo Refreshed temp && openaps enact)"'
+# if autosens.json is not newer than pumphistory-24h-zoned.json, or autosens.json is less than 5 bytes, refresh
+openaps alias add autosens '! bash -c "(! find settings/ -newer settings/autosens.json | grep -q pumphistory-24h-zoned.json || find settings/ -size -5c | grep -q autosens.json) && openaps invoke settings/autosens.json"'
+openaps alias add refresh-old-pumphistory '! bash -c "find monitor/ -mmin -30 -size +100c | grep -q pumphistory-zoned || openaps gather "'
+openaps alias add refresh-old-pumphistory-24h '! bash -c "find settings/ -mmin -30 -size +100c | grep -q pumphistory-24h-zoned || (openaps report invoke settings/pumphistory-24h.json settings/pumphistory-24h-zoned.json 2>/dev/null >/dev/null && echo Refreshed old pumphistory-24h)"'
+openaps alias add refresh-temp-and-enact '! bash -c "find monitor/ -mmin -1 -size +5c | grep -q temp_basal || (openaps report invoke monitor/temp_basal.json 2>/dev/null >/dev/null && echo Refreshed temp && openaps enact)"'
 openaps alias add refresh-pumphistory-and-enact '! bash -c "find monitor/ -mmin -2 | grep -q pumphistory-zoned || (openaps gather && openaps enact)"'
-openaps alias add refresh-old-profile '! bash -c "find settings/ -mmin -30 | grep -q profile || (openaps get-settings 2>/dev/null >/dev/null && echo Refreshed settings)"'
-openaps alias add refresh-profile '! bash -c "find settings/ -mmin -15 | grep -q profile || (openaps get-settings 2>/dev/null >/dev/null && echo Refreshed settings)"'
-openaps alias add refresh-pumphistory-24h '! bash -c "find settings/ -mmin -15 | grep -q pumphistory-24h-zoned || (openaps report invoke settings/pumphistory-24h.json settings/pumphistory-24h-zoned.json 2>/dev/null >/dev/null && echo Refreshed pumphistory-24h)"'
+openaps alias add refresh-old-profile '! bash -c "find settings/ -mmin -30 -size +5c | grep -q profile || (openaps get-settings 2>/dev/null >/dev/null && echo Refreshed settings)"'
+openaps alias add refresh-profile '! bash -c "find settings/ -mmin -15 -size +5c | grep -q profile || (openaps get-settings 2>/dev/null >/dev/null && echo Refreshed settings)"'
+openaps alias add refresh-pumphistory-24h '! bash -c "find settings/ -mmin -15 -size +100c | grep -q pumphistory-24h-zoned || (openaps report invoke settings/pumphistory-24h.json settings/pumphistory-24h-zoned.json 2>/dev/null >/dev/null && echo Refreshed pumphistory-24h)"'
 
 # add aliases to enact and loop
 openaps alias add enact '! bash -c "rm enact/suggested.json; openaps invoke enact/suggested.json && if (cat enact/suggested.json && grep -q duration enact/suggested.json); then ( rm enact/enacted.json; openaps invoke enact/enacted.json ; grep -q duration enact/enacted.json || openaps invoke enact/enacted.json ) 2>&1 | egrep -v \"^  |subg_rfspy|handler\" && cat enact/enacted.json | json -0 | tee enact/enacted.json; grep incorrectly enact/suggested.json && ~/src/oref0/bin/clockset.sh 2>/dev/null || echo Enacted; fi"' || die "Can't add enact"
