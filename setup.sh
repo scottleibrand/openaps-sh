@@ -83,7 +83,7 @@ grep iob /tmp/openaps-devices || openaps device add iob process --require "pumph
 git add iob.ini
 grep meal /tmp/openaps-devices || openaps device add meal process --require "pumphistory profile clock carbs glucose basal" oref0 meal || die "Can't add meal"
 git add meal.ini
-grep get-profile /tmp/openaps-devices || openaps device add get-profile process --require "settings bg_targets isf basal_profile max_iob carb_ratios" oref0 get-profile || die "Can't add get-profile"
+grep get-profile /tmp/openaps-devices || openaps device add get-profile process --require "settings bg_targets isf basal_profile preferences carb_ratios" oref0 get-profile || die "Can't add get-profile"
 git add get-profile.ini
 grep detect-sensitivity /tmp/openaps-devices || openaps device add detect-sensitivity process --require "glucose pumphistory isf basal_profile profile" oref0 detect-sensitivity || die "Can't add detect-sensitivity"
 git add detect-sensitivity.ini
@@ -162,13 +162,13 @@ openaps alias add get-bg '! bash -c "while (openaps bg-fresh-check); do echo -n 
 openaps alias add get-ns-bg '! bash -c "openaps bg-fresh-check || ( openaps get-ns-glucose && cat cgm/ns-glucose.json | json -c \"minAgo=(new Date()-new Date(this.dateString))/60/1000; return minAgo < 10 && minAgo > -5 && this.glucose > 30\" | grep -q glucose && rsync -rtu cgm/ns-glucose.json cgm/glucose.json; rsync -rtu cgm/glucose.json monitor/glucose.json )"' || die "Can't add get-ns-bg"
 openaps alias add gather '! bash -c "openaps report invoke monitor/status.json 2>/dev/null >/dev/null && echo -n Ref && test $(cat monitor/status.json | json bolusing) == false && echo -n resh && openaps monitor-pump 2>/dev/null >/dev/null && echo ed pumphistory || (echo; exit 1) 2>/dev/null"' || die "Can't add gather"
 # if autosens.json is not newer than pumphistory-24h-zoned.json, or autosens.json is less than 5 bytes, refresh
-openaps alias add autosens '! bash -c "(! find settings/ -newer settings/autosens.json | grep -q pumphistory-24h-zoned.json || find settings/ -size -5c | grep -q autosens.json) && openaps invoke settings/autosens.json"'
+openaps alias add autosens '! bash -c "(find settings/ -newer settings/autosens.json | grep -q pumphistory-24h-zoned.json || find settings/ -size -5c | grep -q autosens.json) && openaps invoke settings/autosens.json"'
 openaps alias add refresh-old-pumphistory '! bash -c "find monitor/ -mmin -30 -size +100c | grep -q pumphistory-zoned || openaps gather "'
 openaps alias add refresh-old-pumphistory-24h '! bash -c "find settings/ -mmin -30 -size +100c | grep -q pumphistory-24h-zoned || (openaps report invoke settings/pumphistory-24h.json settings/pumphistory-24h-zoned.json 2>/dev/null >/dev/null && echo Refreshed old pumphistory-24h)"'
 openaps alias add refresh-temp-and-enact '! bash -c "find monitor/ -mmin -2 -size +5c | grep -q temp_basal || (openaps report invoke monitor/temp_basal.json 2>/dev/null >/dev/null && echo Refreshed temp && openaps enact)"'
 openaps alias add refresh-pumphistory-and-enact '! bash -c "find monitor/ -mmin -3 | grep -q pumphistory-zoned || (openaps gather && openaps enact)"'
 openaps alias add refresh-old-profile '! bash -c "find settings/ -mmin -30 -size +5c | grep -q profile || (openaps get-settings 2>/dev/null >/dev/null && echo Refreshed settings)"'
-openaps alias add refresh-profile '! bash -c "find settings/ -mmin -15 -size +5c | grep -q profile || (openaps get-settings 2>/dev/null >/dev/null && echo Refreshed settings)"'
+openaps alias add refresh-profile '! bash -c "find settings/ -mmin -15 -size +5c | grep -q settings.json || (openaps get-settings 2>/dev/null >/dev/null && echo Refreshed settings)"'
 openaps alias add refresh-pumphistory-24h '! bash -c "find settings/ -mmin -15 -size +100c | grep -q pumphistory-24h-zoned || (openaps report invoke settings/pumphistory-24h.json settings/pumphistory-24h-zoned.json 2>/dev/null >/dev/null && echo Refreshed pumphistory-24h)"'
 
 # add aliases to enact and loop
