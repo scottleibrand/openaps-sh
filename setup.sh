@@ -48,9 +48,9 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
 ( ( cd $directory 2>/dev/null && git status ) || ( openaps init $directory ) ) || die "Can't init $directory"
 cd $directory || die "Can't cd $directory"
 
-( ! grep -q max_iob max_iob.json 2>/dev/null || [[ $max_iob != "0" ]] ) && echo "{ \"max_iob\": $max_iob }" > max_iob.json
-cat max_iob.json
-git add max_iob.json
+( ! grep -q max_iob preferences.json 2>/dev/null || [[ $max_iob != "0" ]] ) && echo "{ \"max_iob\": $max_iob }" > preferences.json
+cat preferences.json
+git add preferences.json
 
 sudo cp ~/src/oref0/logrotate.openaps /etc/logrotate.d/openaps
 sudo cp ~/src/oref0/logrotate.rsyslog /etc/logrotate.d/rsyslog
@@ -130,7 +130,7 @@ grep settings/insulin_sensitivities.json /tmp/openaps-reports || openaps report 
 grep settings/carb_ratios.json /tmp/openaps-reports || openaps report add settings/carb_ratios.json JSON pump read_carb_ratios || die "Can't add carb_ratios.json"
 grep settings/basal_profile.json /tmp/openaps-reports || openaps report add settings/basal_profile.json JSON pump read_selected_basal_profile || die "Can't add basal_profile.json"
 grep settings/settings.json /tmp/openaps-reports || openaps report add settings/settings.json JSON pump read_settings || die "Can't add settings.json"
-grep settings/profile.json /tmp/openaps-reports || openaps report add settings/profile.json text get-profile shell settings/settings.json settings/bg_targets.json settings/insulin_sensitivities.json settings/basal_profile.json max_iob.json settings/carb_ratios.json settings/temptargets.json || die "Can't add profile.json"
+grep settings/profile.json /tmp/openaps-reports || openaps report add settings/profile.json text get-profile shell settings/settings.json settings/bg_targets.json settings/insulin_sensitivities.json settings/basal_profile.json preferences.json settings/carb_ratios.json settings/temptargets.json || die "Can't add profile.json"
 
 # add suggest and enact reports
 ls enact 2>/dev/null >/dev/null || mkdir enact || die "Can't mkdir enact"
