@@ -173,8 +173,8 @@ openaps alias add refresh-pumphistory-24h '! bash -c "find settings/ -mmin -15 -
 
 # add aliases to enact and loop
 openaps alias add enact '! bash -c "rm enact/suggested.json; openaps invoke enact/suggested.json && if (cat enact/suggested.json && grep -q duration enact/suggested.json); then ( rm enact/enacted.json; openaps invoke enact/enacted.json ; grep -q duration enact/enacted.json || openaps invoke enact/enacted.json ) 2>&1 | egrep -v \"^  |subg_rfspy|handler\" && cat enact/enacted.json | json -0 | tee enact/enacted.json; grep incorrectly enact/suggested.json && ~/src/oref0/bin/clockset.sh 2>/dev/null; fi"' || die "Can't add enact"
-openaps alias add ns-loop '! bash -c "echo Starting ns-loop at `date`: && openaps get-ns-bg; openaps ns-temptargets && echo -n Refreshed temptargets && openaps ns-meal-carbs && echo \" and meal-carbs\" && openaps upload && openaps autosens"' || die "Can't add ns-loop"
-openaps alias add pump-loop '! bash -c "until(echo Starting pump-loop at `date`: && openaps wait-for-silence && openaps refresh-old-pumphistory && openaps refresh-old-pumphistory-24h && openaps refresh-old-profile && openaps refresh-temp-and-enact && openaps refresh-pumphistory-and-enact && openaps refresh-profile && openaps refresh-pumphistory-24h && echo Completed pump-loop at `date`); do openaps wait-for-long-silence && openaps mmtune; done"' || die "Can't add pump-loop"
+openaps alias add ns-loop '! bash -c "echo Starting ns-loop at `date`: && openaps get-ns-bg; openaps autosens; openaps ns-temptargets && echo -n Refreshed temptargets && openaps ns-meal-carbs && echo \" and meal-carbs\" && openaps upload"' || die "Can't add ns-loop"
+openaps alias add pump-loop '! bash -c "until(echo Starting pump-loop at `date`: && openaps wait-for-silence && openaps refresh-old-pumphistory && openaps refresh-old-pumphistory-24h && openaps refresh-old-profile && openaps refresh-temp-and-enact && openaps refresh-pumphistory-and-enact && openaps refresh-profile && openaps refresh-pumphistory-24h && echo Completed pump-loop at `date`); do openaps wait-for-long-silence && openaps mmtune; sleep 5; done"' || die "Can't add pump-loop"
 
 # add aliases to upload results
 openaps alias add pebble '! bash -c "grep -q iob monitor/iob.json && grep -q absolute enact/suggested.json && openaps report invoke upload/pebble.json"' || die "Can't add pebble"
@@ -185,7 +185,7 @@ openaps alias add format-latest-nightscout-treatments '! bash -c "nightscout cul
 openaps alias add upload-recent-treatments '! bash -c "openaps format-latest-nightscout-treatments && test $(json -f upload/latest-treatments.json -a created_at eventType | wc -l ) -gt 0 && (ns-upload $NIGHTSCOUT_HOST $API_SECRET treatments.json upload/latest-treatments.json ) || echo \"No recent treatments to upload\""' || die "Can't add upload-recent-treatments"
 openaps alias add format-ns-status '! bash -c "ns-status monitor/clock-zoned.json monitor/iob.json enact/suggested.json enact/enacted.json monitor/battery.json monitor/reservoir.json monitor/status.json > upload/ns-status.json"' || die "Can't add format-ns-status"
 openaps alias add upload-ns-status '! bash -c "grep -q iob monitor/iob.json && grep -q absolute enact/suggested.json && openaps format-ns-status && grep -q iob upload/ns-status.json && ns-upload $NIGHTSCOUT_HOST $API_SECRET devicestatus.json upload/ns-status.json"' || die "Can't add upload-ns-status"
-openaps alias add upload '! bash -c "echo -n Upload && ( openaps upload-ns-status; openaps report invoke enact/suggested.json 2>/dev/null; openaps pebble; openaps upload-pumphistory-entries; openaps upload-recent-treatments ) 2>/dev/null >/dev/null && echo ed"' || die "Can't add upload"
+openaps alias add upload '! bash -c "echo -n Upload && ( openaps upload-ns-status; openaps upload-pumphistory-entries; openaps upload-recent-treatments ) 2>/dev/null >/dev/null && echo ed"' || die "Can't add upload"
 
 read -p "Schedule openaps in cron? " -n 1 -r
 echo
