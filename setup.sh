@@ -104,20 +104,20 @@ grep monitor/cgm-glucose.json /tmp/openaps-reports || openaps report add monitor
 mkdir raw-cgm
 grep raw-cgm/raw-entries.json /tmp/openaps-reports || openaps report add raw-cgm/raw-entries.json JSON cgm oref0_glucose --minutes 30
 mkdir cgm
-grep cgm/cgm-glucose.json /tmp/openaps-reports || openaps report add cgm/cgm-glucose.json JSON tz rezone --date display_time --date dateString --timezone "" raw-cgm/raw-entries.json
+grep cgm/cgm-glucose.json /tmp/openaps-reports || openaps report add cgm/cgm-glucose.json JSON tz rezone --date display_time --date dateString raw-cgm/raw-entries.json || die "Can't add cgm/cgm-glucose.json"
 grep cgm/ns-glucose.json /tmp/openaps-reports || openaps report add cgm/ns-glucose.json text ns-glucose shell || die "Can't add ns-glucose.json"
 grep monitor/mmtune.json /tmp/openaps-reports || openaps report add monitor/mmtune.json JSON pump mmtune || die "Can't add mmtune"
 grep settings/model.json /tmp/openaps-reports || openaps report add settings/model.json JSON pump model || die "Can't add model"
 grep monitor/clock.json /tmp/openaps-reports || openaps report add monitor/clock.json JSON pump read_clock || die "Can't add clock.json"
-grep monitor/clock-zoned.json /tmp/openaps-reports || openaps report add monitor/clock-zoned.json JSON tz clock --timezone "" monitor/clock.json || die "Can't add clock-zoned.json"
+grep monitor/clock-zoned.json /tmp/openaps-reports || openaps report add monitor/clock-zoned.json JSON tz clock monitor/clock.json || die "Can't add clock-zoned.json"
 grep monitor/temp_basal.json /tmp/openaps-reports || openaps report add monitor/temp_basal.json JSON pump read_temp_basal || die "Can't add temp_basal.json"
 grep monitor/reservoir.json /tmp/openaps-reports || openaps report add monitor/reservoir.json JSON pump reservoir || die "Can't add reservoir.json"
 grep monitor/battery.json /tmp/openaps-reports || openaps report add monitor/battery.json JSON pump read_battery_status || die "Can't add battery.json"
 grep monitor/status.json /tmp/openaps-reports || openaps report add monitor/status.json JSON pump status || die "Can't add status.json"
 grep monitor/pumphistory.json /tmp/openaps-reports || openaps report add monitor/pumphistory.json JSON pump iter_pump_hours 5 || die "Can't add pumphistory.json"
 grep settings/pumphistory-24h.json /tmp/openaps-reports || openaps report add settings/pumphistory-24h.json JSON pump iter_pump_hours 27 || die "Can't add pumphistory-24h.json"
-grep monitor/pumphistory-zoned.json /tmp/openaps-reports || openaps report add monitor/pumphistory-zoned.json JSON tz rezone --timezone "" monitor/pumphistory.json || die "Can't add pumphistory-zoned.json"
-grep settings/pumphistory-24h-zoned.json /tmp/openaps-reports || openaps report add settings/pumphistory-24h-zoned.json JSON tz rezone --timezone "" settings/pumphistory-24h.json || die "Can't add pumphistory-24h-zoned.json"
+grep monitor/pumphistory-zoned.json /tmp/openaps-reports || openaps report add monitor/pumphistory-zoned.json JSON tz rezone monitor/pumphistory.json || die "Can't add pumphistory-zoned.json"
+grep settings/pumphistory-24h-zoned.json /tmp/openaps-reports || openaps report add settings/pumphistory-24h-zoned.json JSON tz rezone settings/pumphistory-24h.json || die "Can't add pumphistory-24h-zoned.json"
 grep monitor/iob.json /tmp/openaps-reports || openaps report add monitor/iob.json text iob shell monitor/pumphistory-zoned.json settings/profile.json monitor/clock-zoned.json || die "Can't add iob.json"
 grep monitor/meal.json /tmp/openaps-reports || openaps report add monitor/meal.json text meal shell monitor/pumphistory-zoned.json settings/profile.json monitor/clock-zoned.json monitor/glucose.json settings/basal_profile.json monitor/carbhistory.json || die "Can't add meal.json"
 #openaps report remove settings/autosens.json
