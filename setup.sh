@@ -21,12 +21,14 @@ die() {
 
 if [[ $# -lt 2 ]]; then
     #openaps device show pump 2>/dev/null >/dev/null || die "Usage: setup.sh <directory> <pump serial #> [max_iob] [Share serial #]
-    openaps device show pump 2>/dev/null >/dev/null || die "Usage: setup.sh <directory> <pump serial #> [max_iob] [/dev/ttySOMETHING]"
+    openaps device show pump 2>/dev/null >/dev/null || die "Usage: setup.sh <directory> <pump serial #> [/dev/ttySOMETHING] [max_iob]"
 fi
 directory=`mkdir -p $1; cd $1; pwd`
 serial=$2
 
-if [[ $# -lt 3 ]]; then
+ttyport=$3
+
+if [[ $# -lt 4 ]]; then
     max_iob=0
 else
     max_iob=$3
@@ -35,10 +37,8 @@ fi
 #if [[ $# -gt 3 ]]; then
     #share_serial=$4
 #fi
-if [[ $# -gt 3 ]]; then
-    ttyport=$4
-fi
-echo -n Setting up oref0 in $directory for pump $serial with max_iob $max_iob and TTY $ttyport
+echo -n Setting up oref0 in $directory for pump $serial with TTY $ttyport
+if [[ $# -lt 4 ]]; then echo -n and max_iob $max_iob; fi
 echo
 
 read -p "Continue? " -n 1 -r
@@ -54,7 +54,12 @@ ls settings 2>/dev/null >/dev/null || mkdir settings || die "Can't mkdir setting
 ls enact 2>/dev/null >/dev/null || mkdir enact || die "Can't mkdir enact"
 ls upload 2>/dev/null >/dev/null || mkdir upload || die "Can't mkdir upload"
 
-( ! grep -q max_iob preferences.json 2>/dev/null || [[ $max_iob != "0" ]] ) && echo "{ \"max_iob\": $max_iob }" > preferences.json
+if [[ $# -lt 4 ]]; then
+    oref0-get-profile --exportDefaults > preferences.json
+else
+    echo "{ \"max_iob\": $max_iob }" > max_iob.json && oref0-get-profile --updatePreferences max_iob.json > preferences.json && rm max_iob.json
+fi
+
 cat preferences.json
 git add preferences.json
 
@@ -77,13 +82,16 @@ openaps device show 2>/dev/null > /tmp/openaps-devices
 # add devices
 grep -q pump.ini .gitignore 2>/dev/null || echo pump.ini >> .gitignore
 git add .gitignore
-#grep pump /tmp/openaps-devices || openaps device add pump medtronic $serial || die "Can't add pump"
-grep pump /tmp/openaps-devices || openaps device add pump mmeowlink subg_rfspy $ttyport $serial || die "Can't add pump"
-
-
-openaps alias add wait-for-silence '! bash -c "echo -n \"Listening: \"; for i in `seq 1 100`; do echo -n .; ~/src/mmeowlink/bin/mmeowlink-any-pump-comms.py --port '$ttyport' --wait-for 30 2>/dev/null | egrep -v subg | egrep No && break; done"'
-openaps alias add wait-for-long-silence '! bash -c "echo -n \"Listening: \"; for i in `seq 1 100`; do echo -n .; ~/src/mmeowlink/bin/mmeowlink-any-pump-comms.py --port '$ttyport' --wait-for 45 2>/dev/null | egrep -v subg | egrep No && break; done"'
-
+if [[ $# -lt 3 ]]; then
+    grep pump /tmp/openaps-devices || openaps device add pump medtronic $serial || die "Can't add pump"
+    # carelinks can't listen for silence, so just do a preflight check instead
+    openaps alias add wait-for-silence 'report invoke monitor/temp_basal.json'
+    openaps alias add wait-for-long-silence 'report invoke monitor/temp_basal.json'
+else
+    grep pump /tmp/openaps-devices || openaps device add pump mmeowlink subg_rfspy $ttyport $serial || die "Can't add pump"
+    openaps alias add wait-for-silence '! bash -c "echo -n \"Listening: \"; for i in `seq 1 100`; do echo -n .; ~/src/mmeowlink/bin/mmeowlink-any-pump-comms.py --port '$ttyport' --wait-for 30 2>/dev/null | egrep -v subg | egrep No && break; done"'
+    openaps alias add wait-for-long-silence '! bash -c "echo -n \"Listening: \"; for i in `seq 1 100`; do echo -n .; ~/src/mmeowlink/bin/mmeowlink-any-pump-comms.py --port '$ttyport' --wait-for 45 2>/dev/null | egrep -v subg | egrep No && break; done"'
+fi
 
 
 read -p "Schedule openaps in cron? " -n 1 -r
