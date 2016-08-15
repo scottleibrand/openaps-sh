@@ -57,9 +57,10 @@ sudo cp ~/src/oref0/logrotate.rsyslog /etc/logrotate.d/rsyslog
 
 test -d /var/log/openaps || sudo mkdir /var/log/openaps && sudo chown $USER /var/log/openaps
 
-openaps vendor add openapscontrib.timezones
+#openaps vendor add openapscontrib.timezones
+#openaps vendor add mmeowlink.vendors.mmeowlink
+
 #openaps vendor add openxshareble
-openaps vendor add mmeowlink.vendors.mmeowlink
 
 # import template
 cat ~/src/oref/lib/templates/refresh-loops.json | openaps import
