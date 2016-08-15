@@ -37,8 +37,9 @@ fi
 #if [[ $# -gt 3 ]]; then
     #share_serial=$4
 #fi
+
 echo -n Setting up oref0 in $directory for pump $serial with TTY $ttyport
-if [[ $# -lt 4 ]]; then echo -n and max_iob $max_iob; fi
+if [[ $# -gt 4 ]]; then echo -n " and max_iob $max_iob; fi"
 echo
 
 read -p "Continue? " -n 1 -r
