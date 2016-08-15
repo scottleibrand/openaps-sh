@@ -90,9 +90,10 @@ grep -q pump.ini .gitignore 2>/dev/null || echo pump.ini >> .gitignore
 git add .gitignore
 if [[ $# -lt 3 ]]; then
     grep pump /tmp/openaps-devices || openaps device add pump medtronic $serial || die "Can't add pump"
-    # carelinks can't listen for silence, so just do a preflight check instead
+    # carelinks can't listen for silence or mmtune, so just do a preflight check instead
     openaps alias add wait-for-silence 'report invoke monitor/temp_basal.json'
     openaps alias add wait-for-long-silence 'report invoke monitor/temp_basal.json'
+    openaps alias add mmtune 'report invoke monitor/temp_basal.json'
 else
     grep pump /tmp/openaps-devices || openaps device add pump mmeowlink subg_rfspy $ttyport $serial || die "Can't add pump"
     openaps alias add wait-for-silence '! bash -c "echo -n \"Listening: \"; for i in `seq 1 100`; do echo -n .; ~/src/mmeowlink/bin/mmeowlink-any-pump-comms.py --port '$ttyport' --wait-for 30 2>/dev/null | egrep -v subg | egrep No && break; done"'
