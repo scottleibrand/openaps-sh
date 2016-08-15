@@ -40,9 +40,9 @@ fi
 
 echo -n "Setting up oref0 in $directory for pump $serial with "
 if [[ $# -lt 3 ]]; then
-    echo Carelink
+    echo -n Carelink
 else
-    echo TTY $ttyport
+    echo -n TTY $ttyport
 fi
 if [[ $# -ge 4 ]]; then echo -n " and max_iob $max_iob"; fi
 echo
