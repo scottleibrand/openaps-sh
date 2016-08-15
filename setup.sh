@@ -63,7 +63,7 @@ test -d /var/log/openaps || sudo mkdir /var/log/openaps && sudo chown $USER /var
 #openaps vendor add openxshareble
 
 # import template
-cat ~/src/oref/lib/templates/refresh-loops.json | openaps import
+cat ~/src/oref0/lib/templates/refresh-loops.json | openaps import
 
 # don't re-create devices if they already exist
 openaps device show 2>/dev/null > /tmp/openaps-devices
