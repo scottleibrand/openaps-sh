@@ -47,6 +47,12 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
 
 ( ( cd $directory 2>/dev/null && git status ) || ( openaps init $directory ) ) || die "Can't init $directory"
 cd $directory || die "Can't cd $directory"
+ls monitor 2>/dev/null >/dev/null || mkdir monitor || die "Can't mkdir monitor"
+ls raw-cgm 2>/dev/null >/dev/null || mkdir raw-cgm || die "Can't mkdir raw-cgm"
+ls cgm 2>/dev/null >/dev/null || mkdir cgm || die "Can't mkdir cgm"
+ls settings 2>/dev/null >/dev/null || mkdir settings || die "Can't mkdir settings"
+ls enact 2>/dev/null >/dev/null || mkdir enact || die "Can't mkdir enact"
+ls upload 2>/dev/null >/dev/null || mkdir upload || die "Can't mkdir upload"
 
 ( ! grep -q max_iob preferences.json 2>/dev/null || [[ $max_iob != "0" ]] ) && echo "{ \"max_iob\": $max_iob }" > preferences.json
 cat preferences.json
