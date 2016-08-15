@@ -31,7 +31,7 @@ ttyport=$3
 if [[ $# -lt 4 ]]; then
     max_iob=0
 else
-    max_iob=$3
+    max_iob=$4
 fi
 
 #if [[ $# -gt 3 ]]; then
